@@ -137,8 +137,13 @@ class ClaudeGuardRailStructureGeneration(BaseGuardRailStructureGeneration):
 class GPTGuardRailStructureGeneration(BaseGuardRailStructureGeneration):
     def __init__(self, chat_config: Dict[str, Any]) -> None:
         super().__init__(chat_config)
+        # 支持从.env文件或环境变量获取API key
+        api_key = os.environ.get('OPENAI_API_KEY')
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is required")
+        
         self.headers = {
-            "Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
 

@@ -1,0 +1,50 @@
+2025-08-05 21:22:28 | INFO | 🔧 OpenAI客户端配置:
+2025-08-05 21:22:28 | INFO |    模型: Qwen/Qwen3-8B
+2025-08-05 21:22:28 | INFO |    API Base: https://api.siliconflow.cn/v1
+2025-08-05 21:22:28 | INFO |    API Key: sk-dovbcvo...
+2025-08-05 21:22:28 | INFO | 🚀 INVESTOR-BENCH启动 - 运行目录: results/250805_212228_Qwen_Qwen3-8B_JNJ
+2025-08-05 21:22:28 | INFO | 🎯 开始回测 - 模式: backtest
+2025-08-05 21:22:28 | INFO | 📊 加载数据: 3天, 2020-07-02 至 2020-07-07
+2025-08-05 21:22:28 | INFO | 📅 处理第1/3天: 2020-07-02
+2025-08-05 21:22:28 | INFO | 🧠 分析 JNJ - 2020-07-02
+2025-08-05 21:22:37 | INFO | 💰 买入 79.18股 @ $126.30
+2025-08-05 21:22:37 | INFO | 🎯 决策: BUY (置信度: 0.85)
+2025-08-05 21:22:37 | INFO | 📝 投资组合价值: $10000.00
+2025-08-05 21:22:37 | INFO | 💡 理由: 基于今日的两则新闻，JNJ面临积极的市场环境。首先，inHEART获得370万欧元融资，其技术与JNJ在心脏电生理领域的业务存在潜在协同效应，可能为JNJ带来新的合作或技术整合机会。其次，JNJ在有机...
+2025-08-05 21:22:37 | INFO | ------------------------------------------------------------
+2025-08-05 21:22:37 | INFO | 📅 处理第2/3天: 2020-07-06
+2025-08-05 21:22:37 | INFO | 🧠 分析 JNJ - 2020-07-06
+2025-08-05 21:22:48 | INFO | 🎯 决策: HOLD (置信度: 0.75)
+2025-08-05 21:22:48 | INFO | 📝 投资组合价值: $10142.58
+2025-08-05 21:22:48 | INFO | 💡 理由: 尽管Johnson & Johnson (JNJ)宣布降低SIRTURO药物在低收入和中等收入国家的价格，这一举措显著提升了其在公卫领域的声誉，并可能带来长期的市场增长和公共健康合作机会，但同时，公司...
+2025-08-05 21:22:48 | INFO | ------------------------------------------------------------
+2025-08-05 21:22:48 | INFO | 📅 处理第3/3天: 2020-07-07
+2025-08-05 21:22:48 | INFO | 🧠 分析 JNJ - 2020-07-07
+2025-08-05 21:23:02 | INFO | 🎯 决策: BUY (置信度: 0.85)
+2025-08-05 21:23:02 | INFO | 📝 投资组合价值: $10133.36
+2025-08-05 21:23:02 | INFO | 💡 理由: 基于近期三则积极的新闻，JNJ的投资前景较为乐观。首先，CVRx的融资和BAROSTIM NEO的FDA审批进展表明JNJ在心血管医疗设备领域的战略投资获得了市场认可，潜在推动其在该高增长领域的话语权...
+2025-08-05 21:23:02 | INFO | ------------------------------------------------------------
+2025-08-05 21:23:02 | INFO | 📊 生成投资分析报告...
+2025-08-05 21:23:02 | INFO | ✅ 报告已生成在 results/250805_212228_Qwen_Qwen3-8B_JNJ
+2025-08-05 21:23:02 | ERROR | ❌ 系统错误: Object of type URL is not JSON serializable
+2025-08-05 21:23:02 | ERROR | Traceback (most recent call last):
+  File "/Users/svenli/FilesOnNut/0ProjectsOnNut/ForProfYuan/FrameBasedInvestment/references/INVESTOR-BENCH/investor_bench.py", line 502, in main
+    system.save_metadata()
+  File "/Users/svenli/FilesOnNut/0ProjectsOnNut/ForProfYuan/FrameBasedInvestment/references/INVESTOR-BENCH/investor_bench.py", line 454, in save_metadata
+    json.dump(metadata, f, ensure_ascii=False, indent=2)
+  File "/opt/anaconda3/lib/python3.12/json/__init__.py", line 179, in dump
+    for chunk in iterable:
+                 ^^^^^^^^
+  File "/opt/anaconda3/lib/python3.12/json/encoder.py", line 432, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "/opt/anaconda3/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/opt/anaconda3/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/opt/anaconda3/lib/python3.12/json/encoder.py", line 439, in _iterencode
+    o = _default(o)
+        ^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.12/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type URL is not JSON serializable
+

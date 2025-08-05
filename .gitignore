@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# logs and output
+# logs/
+# output/
+
+# Environments
+# .env
+# .venv
+# env/
+# venv/
+# ENV/
+# env.bak/
+# venv.bak/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Project specific
+old/
+temp/
+temp.md
+# *.smm
+# *.json
+
+# logs
+logs/
+# output/
+output/测试三级行业_no_ref_gemini
+output/测试三级行业_no_ref_r1
+logs/old/
+output/consensus_framework_xfdz/
+output/old/
+
+
+# Exclusions for research reports
+research_reports/report_json_demo
+research_reports_test/
+
+# Config files that might contain secrets
+# config.py 
+.env

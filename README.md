@@ -1,27 +1,146 @@
-# InvestorBench
+全部代码来自fork的仓库. 此处是本人学习与自用版本. 
 
-## Usage
+# INVESTOR-BENCH
 
-In this section, we provide a step-by-step guide to running the evaluation framework with the fine-tuned LLM. The evaluation framework consists of three parts:
+基于OpenAI兼容API的智能投资回测系统，支持完整的四层记忆系统和LLM驱动的交易决策。
 
-- **VLLM Server**: The server that provides the API for the fine-tuned LLM. We will use the Docker image provided by the VLLM team. We will explore how to deploy both a LLM and a base LLM with a LoRA head.
+## 🚀 快速开始
 
-- **Qdrant Vector Database**: We will use Qdrant as the vector database for memory storage.
-
-- **Main Framework**: After deploying the VLLM server and Qdrant vector database, we will demonstrate how to run the evaluation framework to assess trading performance.
-
-### Credentials
-
-#### OpenAi & HuggingFace Tokens
-
-The credentials need to be saved in the [.env](/.env) file. The `.env` file should contain the following information:
-
+### 环境准备
 ```bash
-OPENAI_API_KEY=XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX
-HUGGING_FACE_HUB_TOKEN=XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX
+# 安装依赖
+pip install -r requirements.txt
+
+# 启动向量数据库
+docker run -d -p 6333:6333 --name qdrant qdrant/qdrant
+
+# 配置API密钥
+echo 'OPENAI_API_KEY="sk-your-key-here"' > .env
+echo 'OPENAI_API_BASE="https://api.siliconflow.cn/v1"' >> .env
 ```
 
-The OpenAI API key is used to generate the embeddings for input text. The Hugging Face Hub token is used to download the fine-tuned LLM model.  Please make sure the Hugging Face Hub token has the access to the fine-tuned LLM model/LORA head.
+### 运行回测
+```bash
+# 生成配置
+pkl eval -f json -o configs/main.json configs/main.pkl
+
+# 执行完整回测流程
+python run.py warmup    # 学习阶段
+python run.py test      # 回测阶段  
+python run.py eval      # 结果分析
+```
+
+## 📋 快速CLI参考
+
+| 命令 | 功能 | 说明 |
+|------|------|------|
+| `python run.py warmup` | 学习阶段 | AI从专业交易员建议中学习 |
+| `python run.py warmup-checkpoint` | 恢复学习 | 从检查点继续warmup |
+| `python run.py test` | 回测阶段 | 基于记忆进行独立投资决策 |
+| `python run.py test-checkpoint` | 恢复回测 | 从检查点继续test |
+| `python run.py eval` | 结果分析 | 生成CSV报告和Markdown分析 |
+| `python test_api.py` | API测试 | 测试Chat API连通性 |
+| `python test_embedding.py` | Embedding测试 | 测试Embedding API功能 |
+| `pkl eval -f json -o configs/main.json configs/main.pkl` | 生成配置 | 将PKL配置转换为JSON |
+
+## 🎯 核心特性
+
+### 四层记忆系统
+- **短期记忆** (1-7天): 日常新闻、价格波动
+- **中期记忆** (1周-3月): 季报分析、行业趋势  
+- **长期记忆** (3月以上): 基本面知识、历史经验
+- **反思记忆** (持久): 投资哲学、策略总结
+
+### OpenAI兼容API支持
+- ✅ **SiliconFlow** - Qwen3-8B + Qwen3-Embedding-4B (已验证)
+- ✅ **OpenAI** - GPT-4, text-embedding-3-large
+- ✅ **Anthropic** - Claude-3.5-Sonnet (需外部embedding)
+- ✅ **本地部署** - 通过vLLM/Ollama等
+
+### 完整投资组合管理
+- 单资产和多资产策略支持
+- 详细交易记录和证据链
+- 关键性能指标计算
+- 检查点保存和恢复机制
+
+## 📊 系统架构
+
+```
+数据输入 → MarketEnv环境模拟 → FinMemAgent智能代理 → 记忆系统
+                                        ↓
+投资组合管理 ← LLM决策引擎 ← 记忆检索 ← Qdrant向量数据库
+    ↓
+结果输出 (CSV + Markdown报告)
+```
+
+## 📚 详细文档
+
+完整的项目文档位于 `docs/` 目录：
+
+- [快速开始指南](./docs/quick-start.md) - 5分钟上手教程
+- [系统架构](./docs/architecture.md) - 深入理解系统设计
+- [API集成指南](./docs/api-integration.md) - 多种API服务商集成
+- [记忆系统设计](./docs/memory-system.md) - 四层记忆系统详解
+- [CLI命令参考](./docs/cli-reference.md) - 完整命令行使用说明
+- [故障排除指南](./docs/troubleshooting.md) - 常见问题解决方案
+
+## 🔧 配置示例
+
+### SiliconFlow API配置
+```bash
+# .env文件
+OPENAI_API_KEY="sk-your-siliconflow-key"
+OPENAI_API_BASE="https://api.siliconflow.cn/v1"
+OPENAI_MODEL="Qwen/Qwen3-8B"
+EMBEDDING_MODEL="Qwen/Qwen3-Embedding-4B"
+```
+
+### 自定义交易资产
+```pkl
+// configs/main.pkl中修改
+trading_symbols = new Listing {
+    "AAPL"   // Apple
+    "GOOGL"  // Google  
+    "MSFT"   // Microsoft
+}
+```
+
+### 调整时间范围
+```pkl
+warmup_start_time = "2020-01-01"
+warmup_end_time = "2020-06-30"
+test_start_time = "2020-07-01"
+test_end_time = "2020-12-31"
+```
+
+## 🎯 运行示例
+
+当前系统正在运行JNJ（强生）的回测示例：
+- **测试期间**: 2020-07-02 至 2020-07-10 (短期验证)
+- **使用模型**: Qwen3-8B (SiliconFlow API)
+- **记忆系统**: 四层记忆完全启用
+- **实时状态**: 正在进行LLM交易决策分析
+
+## 📈 预期输出
+
+系统将生成以下结果文件：
+- `results/exp/qwen3-8b-siliconflow/JNJ/final_result/` - CSV交易记录
+- `results/exp/qwen3-8b-siliconflow/JNJ/final_result/` - Markdown分析报告
+- `results/exp/qwen3-8b-siliconflow/JNJ/log/` - 详细运行日志
+
+## 🤝 贡献
+
+这个项目基于原INVESTOR-BENCH框架，专注于OpenAI兼容API的集成和优化。欢迎提交Issue和Pull Request。
+
+## 📄 许可证
+
+请参考原项目许可证要求。
+
+---
+
+## 附录：原项目信息
+
+以下内容保留自原INVESTOR-BENCH项目，供参考：
 
 #### Guardrails Tokens
 

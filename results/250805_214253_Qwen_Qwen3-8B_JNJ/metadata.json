@@ -1,0 +1,31 @@
+{
+  "run_info": {
+    "start_time": "2025-08-05T21:42:53.521632",
+    "end_time": "2025-08-05T21:49:42.117682",
+    "duration_seconds": 408.59605,
+    "run_directory": "results/250805_214253_Qwen_Qwen3-8B_JNJ",
+    "command_line": "investor_bench.py --symbol JNJ --start-date 2020-07-01 --end-date 2020-08-13 --mode test --verbose"
+  },
+  "configuration": {
+    "symbol": "JNJ",
+    "start_date": "2020-07-01",
+    "end_date": "2020-08-13",
+    "mode": "test",
+    "model": "Qwen/Qwen3-8B",
+    "api_base": "https://api.siliconflow.cn/v1/",
+    "embedding_model": "Qwen/Qwen3-Embedding-4B"
+  },
+  "api_statistics": {
+    "chat_calls": 31,
+    "embedding_calls": 0,
+    "total_tokens": 29581,
+    "errors": 0
+  },
+  "system_info": {
+    "python_version": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 08:22:19) [Clang 14.0.6 ]",
+    "platform": "darwin",
+    "working_directory": "/Users/svenli/FilesOnNut/0ProjectsOnNut/ForProfYuan/FrameBasedInvestment/references/INVESTOR-BENCH"
+  },
+  "memory_records": 10,
+  "version": "2.0.0"
+}

@@ -1,6 +1,9 @@
 from typing import List, Union
 
-from guardrails.hub import ValidChoices
+try:
+    from guardrails.hub import ValidChoices
+except ImportError:
+    from .mock_validators import ValidChoices
 from pydantic import BaseModel, Field
 
 from ...utils import RunMode

@@ -16,9 +16,7 @@ class EmbeddingObject(BaseModel):
 class EmbeddingSuccessResponse(BaseModel):
     object: Literal["list"]
     data: List[EmbeddingObject]
-    model: Literal[
-        "text-embedding-3-large", "text-embedding-3-small", "text-embedding-ada-002"
-    ]
+    model: str  # 支持任意模型名称，包括SiliconFlow的Qwen模型
     usage: Dict[str, int]
 
 

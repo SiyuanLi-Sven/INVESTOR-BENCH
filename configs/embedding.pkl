@@ -22,8 +22,15 @@ text_embedding_ada_002: EmbEndpointConfig = new {
   emb_size = 1536
 }
 
+qwen3_embedding_4b_siliconflow: EmbEndpointConfig = new {
+  emb_model_name = "Qwen/Qwen3-Embedding-4B"
+  request_endpoint = "https://api.siliconflow.cn/v1/embeddings"
+  emb_size = 2560
+}
+
 embedding_models = new Mapping {
   ["text-embedding-3-large"] = text_embedding_3_large
   ["text-embedding-3-small"] = text-embedding-3-small
   ["text-embedding-ada-002"] = text_embedding_ada_002
+  ["qwen3-embedding-4b-siliconflow"] = qwen3_embedding_4b_siliconflow
 }

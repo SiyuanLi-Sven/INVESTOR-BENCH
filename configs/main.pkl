@@ -19,12 +19,10 @@ hidden config = new meta.MetaConfig {
     //test_end_time = "2020-09-21"
     // stock
     trading_symbols = new Listing {
-            "UVV"
-            "TSLA"
             "JNJ"
     }
     warmup_start_time = "2020-07-02"
-    warmup_end_time = "2020-09-30"
+    warmup_end_time = "2020-07-10"
     test_start_time = "2020-10-01"
     test_end_time = "2021-05-06"
     // BTC
@@ -46,8 +44,8 @@ hidden config = new meta.MetaConfig {
     top_k = 5
     look_back_window_size = 3
     momentum_window_size = 3
-    embedding_model = "text-embedding-3-large"
-    chat_model = "llama-3.1-8b-instruct"
+    embedding_model = "qwen3-embedding-4b-siliconflow"
+    chat_model = "qwen3-8b-siliconflow"
     chat_vllm_endpoint = "http://0.0.0.0:8000"
     chat_parameters = new Mapping {
         ["temperature"] = 0.6

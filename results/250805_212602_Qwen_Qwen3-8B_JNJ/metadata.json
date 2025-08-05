@@ -1,0 +1,15 @@
+{
+  "run_info": {
+    "start_time": "2025-08-05T21:26:02.560503",
+    "end_time": "2025-08-05T21:26:37.227389",
+    "duration_seconds": 34.666886,
+    "run_directory": "results/250805_212602_Qwen_Qwen3-8B_JNJ",
+    "command_line": "investor_bench.py --symbol JNJ --start-date 2020-10-01 --end-date 2020-10-05 --mode test"
+  },
+  "configuration": {
+    "symbol": "JNJ",
+    "start_date": "2020-10-01",
+    "end_date": "2020-10-05",
+    "mode": "test",
+    "model": "Qwen/Qwen3-8B",
+    "api_base": 

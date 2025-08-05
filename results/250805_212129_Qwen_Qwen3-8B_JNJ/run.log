@@ -1,0 +1,19 @@
+2025-08-05 21:21:29 | INFO | 🔧 OpenAI客户端配置:
+2025-08-05 21:21:29 | INFO |    模型: Qwen/Qwen3-8B
+2025-08-05 21:21:29 | INFO |    API Base: https://api.siliconflow.cn/v1
+2025-08-05 21:21:29 | INFO |    API Key: sk-dovbcvo...
+2025-08-05 21:21:29 | INFO | 🚀 INVESTOR-BENCH启动 - 运行目录: results/250805_212129_Qwen_Qwen3-8B_JNJ
+2025-08-05 21:21:29 | INFO | 🎯 开始回测 - 模式: backtest
+2025-08-05 21:21:29 | ERROR | ❌ 系统错误: string indices must be integers, not 'str'
+2025-08-05 21:21:29 | ERROR | Traceback (most recent call last):
+  File "/Users/svenli/FilesOnNut/0ProjectsOnNut/ForProfYuan/FrameBasedInvestment/references/INVESTOR-BENCH/investor_bench.py", line 481, in main
+    results = system.run_backtest()
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/svenli/FilesOnNut/0ProjectsOnNut/ForProfYuan/FrameBasedInvestment/references/INVESTOR-BENCH/investor_bench.py", line 216, in run_backtest
+    market_data = self.load_market_data()
+                  ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/svenli/FilesOnNut/0ProjectsOnNut/ForProfYuan/FrameBasedInvestment/references/INVESTOR-BENCH/investor_bench.py", line 150, in load_market_data
+    day_date = datetime.strptime(day_data['date'], '%Y-%m-%d').date()
+                                 ~~~~~~~~^^^^^^^^
+TypeError: string indices must be integers, not 'str'
+

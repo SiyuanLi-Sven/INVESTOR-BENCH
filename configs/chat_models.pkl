@@ -190,6 +190,24 @@ palmyra_70b: ChatModelConfig = new {
     chat_parameters = new Mapping {}
 }
 
+// SiliconFlow API 兼容模型
+qwen3_8b_siliconflow: ChatModelConfig = new {
+    chat_model = "Qwen/Qwen3-8B"
+    chat_model_type = "chat"
+    chat_model_inference_engine = "openai"
+    chat_endpoint = "https://api.siliconflow.cn/v1/chat/completions"
+    chat_template_path = null
+    chat_system_message = "You are a helpful assistant."
+    chat_parameters = new Mapping {
+        ["temperature"] = 0.7
+        ["max_tokens"] = 1024
+    }
+    chat_request_sleep = new Mapping {
+        ["sleep_time"] = 2
+        ["sleep_every_count"] = 10
+    }
+}
+
 
 chat_model_dict = new Mapping {
     // close source
@@ -214,4 +232,6 @@ chat_model_dict = new Mapping {
     ["deepseek-67b-chat"] = deepseek_67b_chat
     // financial domain
     ["palmyra-70b"] = palmyra_70b
+    // SiliconFlow API 兼容模型
+    ["qwen3-8b-siliconflow"] = qwen3_8b_siliconflow
 }

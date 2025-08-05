@@ -1,0 +1,50 @@
+2025-08-05 21:26:02 | INFO | 🔧 OpenAI客户端配置:
+2025-08-05 21:26:02 | INFO |    模型: Qwen/Qwen3-8B
+2025-08-05 21:26:02 | INFO |    API Base: https://api.siliconflow.cn/v1
+2025-08-05 21:26:02 | INFO |    API Key: sk-dovbcvo...
+2025-08-05 21:26:02 | INFO | 🚀 INVESTOR-BENCH启动 - 运行目录: results/250805_212602_Qwen_Qwen3-8B_JNJ
+2025-08-05 21:26:02 | INFO | 🎯 开始回测 - 模式: test
+2025-08-05 21:26:02 | INFO | 📊 加载数据: 3天, 2020-10-01 至 2020-10-05
+2025-08-05 21:26:02 | INFO | 📅 处理第1/3天: 2020-10-01
+2025-08-05 21:26:02 | INFO | 🧠 分析 JNJ - 2020-10-01
+2025-08-05 21:26:13 | INFO | 🎯 决策: HOLD (置信度: 0.75)
+2025-08-05 21:26:13 | INFO | 📝 投资组合价值: $10000.00
+2025-08-05 21:26:13 | INFO | 💡 理由: 基于当前市场信息和今日新闻，JNJ面临复杂的投资环境。一方面，全球免疫抑制剂药物市场预计以4.00%的CAGR增长，特别是拉美地区和墨西哥的快速增长为公司带来了潜在的市场机遇。这表明JNJ在该领域的业...
+2025-08-05 21:26:13 | INFO | ------------------------------------------------------------
+2025-08-05 21:26:13 | INFO | 📅 处理第2/3天: 2020-10-02
+2025-08-05 21:26:13 | INFO | 🧠 分析 JNJ - 2020-10-02
+2025-08-05 21:26:22 | INFO | 🎯 决策: HOLD (置信度: 0.75)
+2025-08-05 21:26:22 | INFO | 📝 投资组合价值: $10000.00
+2025-08-05 21:26:22 | INFO | 💡 理由: 基于当前市场信息和新闻，Johnson & Johnson (JNJ) 在免疫抑制剂药物领域仍具有增长潜力，但近期的法律诉讼对其构成了显著风险，需持续关注。同时，PQ Bypass 的新闻显示其在医疗...
+2025-08-05 21:26:22 | INFO | ------------------------------------------------------------
+2025-08-05 21:26:22 | INFO | 📅 处理第3/3天: 2020-10-05
+2025-08-05 21:26:22 | INFO | 🧠 分析 JNJ - 2020-10-05
+2025-08-05 21:26:37 | ERROR | ❌ LLM调用失败: Extra data: line 11 column 2 (char 569)
+2025-08-05 21:26:37 | INFO | 🎯 决策: HOLD (置信度: 0.00)
+2025-08-05 21:26:37 | INFO | 📝 投资组合价值: $10000.00
+2025-08-05 21:26:37 | INFO | 💡 理由: API调用失败...
+2025-08-05 21:26:37 | INFO | ------------------------------------------------------------
+2025-08-05 21:26:37 | INFO | 📊 生成投资分析报告...
+2025-08-05 21:26:37 | INFO | ✅ 报告已生成在 results/250805_212602_Qwen_Qwen3-8B_JNJ
+2025-08-05 21:26:37 | ERROR | ❌ 系统错误: Object of type URL is not JSON serializable
+2025-08-05 21:26:37 | ERROR | Traceback (most recent call last):
+  File "/Users/svenli/FilesOnNut/0ProjectsOnNut/ForProfYuan/FrameBasedInvestment/references/INVESTOR-BENCH/investor_bench.py", line 502, in main
+    system.save_metadata()
+  File "/Users/svenli/FilesOnNut/0ProjectsOnNut/ForProfYuan/FrameBasedInvestment/references/INVESTOR-BENCH/investor_bench.py", line 454, in save_metadata
+    json.dump(metadata, f, ensure_ascii=False, indent=2)
+  File "/opt/anaconda3/lib/python3.12/json/__init__.py", line 179, in dump
+    for chunk in iterable:
+                 ^^^^^^^^
+  File "/opt/anaconda3/lib/python3.12/json/encoder.py", line 432, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "/opt/anaconda3/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/opt/anaconda3/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/opt/anaconda3/lib/python3.12/json/encoder.py", line 439, in _iterencode
+    o = _default(o)
+        ^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.12/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type URL is not JSON serializable
+
