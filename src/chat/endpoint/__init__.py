@@ -6,10 +6,14 @@ from .base import (
     MultiAssetsStructureGenerationFailure,
     SingleAssetStructureOutputResponse,
     MultiAssetsStructureOutputResponse,
+    delete_placeholder_info,
 )
-
-from .vllm import SingleAssetVLLMStructureGeneration, MultiAssetsVLLMStructureGeneration
 from .guardrails import (
     GPTGuardRailStructureGeneration,
     ClaudeGuardRailStructureGeneration,
 )
+from .vllm import (
+    SingleAssetVLLMStructureGeneration,
+    MultiAssetsVLLMStructureGeneration,
+)
+from .openai import OpenAIEndpoint

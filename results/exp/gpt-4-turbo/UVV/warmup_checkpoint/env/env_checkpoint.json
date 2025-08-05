@@ -1,0 +1,11 @@
+{
+  "env_date_path": {
+    "UVV": "data/uvv.json"
+  },
+  "start_date": "2020-09-30",
+  "end_date": "2020-09-30",
+  "symbol": [
+    "UVV"
+  ],
+  "momentum_window_size": 3
+}

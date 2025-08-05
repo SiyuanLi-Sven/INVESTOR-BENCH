@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore")
 import os
 import sys
 import time
-from typing import Dict
+from typing import Dict, Optional
 
 import orjson
 import typer
@@ -35,6 +35,18 @@ def load_config(path: str) -> Dict:
         return orjson.loads(f.read())
 
 
+def update_config_with_model_name(config: Dict, model_name: Optional[str] = None) -> Dict:
+    """根据命令行参数更新配置中的模型名称"""
+    if model_name:
+        logger.info(f"SYS-使用命令行指定的模型: {model_name}")
+        config["chat_config"]["chat_model"] = model_name
+        # 如果是OpenAI模型，确保使用正确的推理引擎
+        if model_name.startswith(("gpt-", "ft:")):
+            config["chat_config"]["chat_model_inference_engine"] = "openai"
+            logger.info("SYS-自动设置推理引擎为OpenAI")
+    return config
+
+
 class RequestTimeSleep:
     def __init__(self, sleep_time: PositiveInt, sleep_every_count: PositiveInt) -> None:
         self.sleep_time = sleep_time
@@ -52,9 +64,18 @@ def warmup_up_func(
     config_path: str = typer.Option(
         os.path.join("configs", "main.json"), "--config-path", "-c"
     ),
+    model_name: Optional[str] = typer.Option(
+        None, "--model-name", help="指定使用的OpenAI模型名称，如gpt-4-turbo"
+    ),
 ):  # sourcery skip: low-code-quality
-    # load config
+    # 加载环境变量
+    load_dotenv()
+    
+    # 加载配置
     config = load_config(path=config_path)
+    
+    # 更新模型名称
+    config = update_config_with_model_name(config, model_name)
 
     # ensure path
     ensure_path(save_path=config["meta_config"]["warmup_checkpoint_save_path"])
@@ -189,9 +210,23 @@ def warmup_checkpoint_func(
     config_path: str = typer.Option(
         os.path.join("configs", "main.json"), "--config-path", "-c"
     ),
+    model_name: Optional[str] = typer.Option(
+        None, "--model-name", help="指定使用的OpenAI模型名称，如gpt-4-turbo"
+    ),
 ):  # sourcery skip: low-code-quality
-    # load config
+    # 加载环境变量
+    load_dotenv()
+    
+    # 加载配置
     config = load_config(path=config_path)
+    
+    # 更新模型名称
+    config = update_config_with_model_name(config, model_name)
+
+    # ensure path
+    ensure_path(save_path=config["meta_config"]["warmup_checkpoint_save_path"])
+    ensure_path(save_path=config["meta_config"]["warmup_output_save_path"])
+    ensure_path(save_path=config["meta_config"]["log_save_path"])
 
     # logger
     logger.remove(0)
@@ -305,9 +340,24 @@ def test_func(
     config_path: str = typer.Option(
         os.path.join("configs", "main.json"), "--config-path", "-c"
     ),
+    model_name: Optional[str] = typer.Option(
+        None, "--model-name", help="指定使用的OpenAI模型名称，如gpt-4-turbo"
+    ),
 ):  # sourcery skip: low-code-quality
-    # load config
+    # 加载环境变量
+    load_dotenv()
+    
+    # 加载配置
     config = load_config(path=config_path)
+    
+    # 更新模型名称
+    config = update_config_with_model_name(config, model_name)
+
+    # ensure path
+    ensure_path(save_path=config["meta_config"]["test_checkpoint_save_path"])
+    ensure_path(save_path=config["meta_config"]["test_output_save_path"])
+    ensure_path(save_path=config["meta_config"]["result_save_path"])
+    ensure_path(save_path=config["meta_config"]["log_save_path"])
 
     # logger
     logger.remove(0)
@@ -435,9 +485,24 @@ def test_checkpoint_func(
     config_path: str = typer.Option(
         os.path.join("configs", "main.json"), "--config-path", "-c"
     ),
+    model_name: Optional[str] = typer.Option(
+        None, "--model-name", help="指定使用的OpenAI模型名称，如gpt-4-turbo"
+    ),
 ):  # sourcery skip: low-code-quality
-    # load config
+    # 加载环境变量
+    load_dotenv()
+    
+    # 加载配置
     config = load_config(path=config_path)
+    
+    # 更新模型名称
+    config = update_config_with_model_name(config, model_name)
+
+    # ensure path
+    ensure_path(save_path=config["meta_config"]["test_checkpoint_save_path"])
+    ensure_path(save_path=config["meta_config"]["test_output_save_path"])
+    ensure_path(save_path=config["meta_config"]["result_save_path"])
+    ensure_path(save_path=config["meta_config"]["log_save_path"])
 
     # logger
     logger.remove(0)
@@ -553,9 +618,18 @@ def eval_func(
     config_path: str = typer.Option(
         os.path.join("configs", "main.json"), "--config-path", "-c"
     ),
+    model_name: Optional[str] = typer.Option(
+        None, "--model-name", help="指定使用的OpenAI模型名称，如gpt-4-turbo"
+    ),
 ):
-    # load config
+    # 加载环境变量
+    load_dotenv()
+    
+    # 加载配置
     config = load_config(path=config_path)
+    
+    # 更新模型名称
+    config = update_config_with_model_name(config, model_name)
 
     if len(config["env_config"]["trading_symbols"]) > 1:
         task_type = TaskType.MultiAssets

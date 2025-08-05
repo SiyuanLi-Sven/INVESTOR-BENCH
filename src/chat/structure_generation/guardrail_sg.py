@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from guardrails.hub import ValidChoices
+from guardrails.validators import ValidChoices
 from pydantic import BaseModel, Field
 
 from ...utils import RunMode
