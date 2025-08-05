@@ -89,9 +89,6 @@ class OpenAIEmbedding(EmbeddingModel):
             try:
                 results = EmbeddingSuccessResponse(**response.json())
                 logger.trace("EMB-OpenAIEmbedding success response")
-                # ensure the order and return
-                embeddings = sorted(results.data, key=lambda x: x.index)  # type: ignore
-                return [i.embedding for i in embeddings]
             except Exception as e:
                 try:
                     error_response = EmbeddingErrorResponse(**response.json())
@@ -105,5 +102,7 @@ class OpenAIEmbedding(EmbeddingModel):
                 except Exception:
                     response.raise_for_status()
                     logger.error("EMB-OpenAIEmbedding failed with unknown error")
-                    # Return empty embeddings for now to avoid crashing
-                    return [[0.0] * self.config["emb_size"] for _ in texts]
+
+            # ensure the order and return
+            embeddings = sorted(results.data, key=lambda x: x.index)  # type: ignore
+            return [i.embedding for i in embeddings]

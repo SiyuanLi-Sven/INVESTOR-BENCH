@@ -13,7 +13,6 @@ from .endpoint import (
     MultiAssetsStructureOutputResponse,
     GPTGuardRailStructureGeneration,
     ClaudeGuardRailStructureGeneration,
-    OpenAIEndpoint,
 )
 
 from .prompt import (
@@ -67,28 +66,12 @@ def get_chat_model(
             )
     elif chat_config["chat_model_inference_engine"] == "openai":
         if task_type == TaskType.SingleAsset:
-            # 使用新的OpenAI端点实现
-            logger.trace("SYS-Chat model is OpenAI (Direct)")
-            return (
-                GuardrailStructureGenerationSchema(),
-                OpenAIEndpoint(chat_config=chat_config),
-                GuardrailPromptConstructor(),
-            )
-        else:
-            # 使用新的OpenAI端点实现，但目前仅支持单资产
-            logger.error("SYS-Multi-asset not implemented for OpenAI")
-            raise NotImplementedError("Multi-asset not implemented for OpenAI")
-    elif chat_config["chat_model_inference_engine"] == "openai-guardrails":
-        # 保留原来的guardrails实现，以向后兼容
-        if task_type == TaskType.SingleAsset:
-            logger.trace("SYS-Chat model is OpenAI (Guardrails)")
             return (
                 GuardrailStructureGenerationSchema(),
                 GPTGuardRailStructureGeneration(chat_config=chat_config),
                 GuardrailPromptConstructor(),
             )
         else:
-            logger.error("SYS-Multi-asset not implemented for OpenAI")
             raise NotImplementedError("Multi-asset not implemented for OpenAI")
     elif chat_config["chat_model_inference_engine"] == "anthropic":
         if task_type == TaskType.SingleAsset:
