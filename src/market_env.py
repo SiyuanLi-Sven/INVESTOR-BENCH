@@ -226,10 +226,12 @@ class MarketEnv:
         ensure_path(path)
         state_dict = {
             "env_date_path": self.env_data_path,
-            "start_date": self.update_start_date,
-            "end_date": self.end_date,
+            "start_date": self.start_date.strftime("%Y-%m-%d"),  # 保存原始开始日期，不是update_start_date
+            "end_date": self.end_date.strftime("%Y-%m-%d"),
             "symbol": self.symbols,
             "momentum_window_size": self.momentum_window,
+            "current_date": getattr(self, 'update_start_date', self.start_date).strftime("%Y-%m-%d") if hasattr(self, 'update_start_date') else None,  # 单独保存当前进度
+            "day_count": self.day_count,  # 保存当前步数
         }
         with open(os.path.join(path, "env_checkpoint.json"), "w") as f:
             # json.dump(state_dict, f)
@@ -245,16 +247,33 @@ class MarketEnv:
         logger.info(f"ENV-Environment saved to {path}")
 
     @classmethod
-    def load_checkpoint(cls, path: str) -> "MarketEnv":
+    def load_checkpoint(cls, path: str, override_test_dates: dict = None) -> "MarketEnv":
         logger.info(f"ENV-Loading environment from {path}")
         with open(os.path.join(path, "env_checkpoint.json"), "r") as f:
             env_config = json.load(f)
+        
+        # 如果提供了测试日期覆盖参数，使用它们而不是checkpoint中的日期
+        if override_test_dates:
+            start_date = override_test_dates.get("start_date", env_config["start_date"])
+            end_date = override_test_dates.get("end_date", env_config["end_date"])
+            logger.info(f"ENV-Overriding dates for test phase: {start_date} to {end_date}")
+        else:
+            start_date = env_config["start_date"]
+            end_date = env_config["end_date"]
+            
         env = cls(
             env_data_path=env_config["env_date_path"],
-            start_date=env_config["start_date"],
-            end_date=env_config["end_date"],
+            start_date=start_date,
+            end_date=end_date,
             symbol=env_config["symbol"],
             momentum_window_size=env_config["momentum_window_size"],
         )
+        
+        # 如果有保存的进度信息，恢复它
+        if "current_date" in env_config and env_config["current_date"] and not override_test_dates:
+            env.update_start_date = datetime.strptime(env_config["current_date"], "%Y-%m-%d").date()
+        if "day_count" in env_config and not override_test_dates:
+            env.day_count = env_config["day_count"]
+            
         logger.info(f"ENV-Environment loaded from {path}")
         return env

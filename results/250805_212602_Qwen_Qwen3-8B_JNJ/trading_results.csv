@@ -1,4 +1,0 @@
-date,symbol,price,action,confidence,position,portfolio_value,daily_return
-2020-10-01,JNJ,132.8671875,HOLD,0.75,0,10000.0,0
-2020-10-02,JNJ,131.89309692382812,HOLD,0.75,0,10000.0,0.0
-2020-10-05,JNJ,133.6878662109375,HOLD,0.0,0,10000.0,0.0

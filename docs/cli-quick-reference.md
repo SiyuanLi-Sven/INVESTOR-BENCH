@@ -2,6 +2,14 @@
 
 本文档提供INVESTOR-BENCH的所有常用命令，可以直接复制运行。
 
+## 💡 重要概念
+
+**INVESTOR-BENCH采用两阶段设计**：
+- 🎓 **Warmup阶段**: AI学习历史数据，建立记忆和投资风格
+- 🎯 **Test阶段**: AI基于学到的知识在"未来"数据上进行实际投资
+
+**强烈建议**：完整的实验应该包含Warmup + Test两个阶段，而不是仅运行单个阶段！
+
 ## 📋 环境配置
 
 ### 配置API密钥
@@ -34,6 +42,82 @@ python investor_bench.py \
   --end-date 2020-07-10 \
   --mode test
 ```
+
+## 📅 标准两阶段实验
+
+INVESTOR-BENCH采用Warmup(学习) + Test(实战)两阶段设计，推荐使用以下预设配置：
+
+### 🎓 JNJ完整实验 (推荐新手)
+```bash
+# 阶段1: Warmup - AI学习期 (9天)
+python investor_bench.py \
+  --symbol JNJ \
+  --start-date 2020-07-02 \
+  --end-date 2020-07-10 \
+  --mode warmup \
+  --verbose
+
+# 阶段2: Test - AI实战期 (7个月+)
+python investor_bench.py \
+  --symbol JNJ \
+  --start-date 2020-10-01 \
+  --end-date 2021-05-06 \
+  --mode test \
+  --verbose
+```
+
+### 🚀 MSFT科技股实验
+```bash
+# Warmup阶段
+python investor_bench.py \
+  --symbol MSFT \
+  --start-date 2020-07-02 \
+  --end-date 2020-07-10 \
+  --mode warmup
+
+# Test阶段  
+python investor_bench.py \
+  --symbol MSFT \
+  --start-date 2020-10-01 \
+  --end-date 2021-05-06 \
+  --mode test
+```
+
+### ₿ 比特币完整实验 (2023)
+```bash
+# Warmup阶段 (2.5个月)
+python investor_bench.py \
+  --symbol BTC \
+  --start-date 2023-01-19 \
+  --end-date 2023-04-04 \
+  --mode warmup
+
+# Test阶段 (7个月)
+python investor_bench.py \
+  --symbol BTC \
+  --start-date 2023-04-05 \
+  --end-date 2023-11-05 \
+  --mode test
+```
+
+### ⚡ 以太坊完整实验 (2023)
+```bash
+# Warmup阶段
+python investor_bench.py \
+  --symbol ETH \
+  --start-date 2023-01-19 \
+  --end-date 2023-04-02 \
+  --mode warmup
+
+# Test阶段
+python investor_bench.py \
+  --symbol ETH \
+  --start-date 2023-04-03 \
+  --end-date 2023-11-05 \
+  --mode test
+```
+
+## 🔬 自定义实验
 
 ### 短期回测 (1周)
 ```bash
@@ -174,6 +258,47 @@ python investor_bench.py \
 ```
 
 ## 🎨 实用脚本
+
+### 完整两阶段实验脚本
+```bash
+#!/bin/bash
+# two_stage_experiment.sh - 完整的Warmup + Test实验
+
+run_two_stage_experiment() {
+    local symbol=$1
+    local warmup_start=$2
+    local warmup_end=$3
+    local test_start=$4
+    local test_end=$5
+    
+    echo "=== 开始 $symbol 两阶段实验 ==="
+    
+    echo "阶段1: Warmup ($warmup_start 至 $warmup_end)"
+    python investor_bench.py \
+        --symbol "$symbol" \
+        --start-date "$warmup_start" \
+        --end-date "$warmup_end" \
+        --mode warmup \
+        --verbose
+    
+    echo "阶段2: Test ($test_start 至 $test_end)"
+    python investor_bench.py \
+        --symbol "$symbol" \
+        --start-date "$test_start" \
+        --end-date "$test_end" \
+        --mode test \
+        --verbose
+        
+    echo "=== $symbol 实验完成 ==="
+    echo ""
+}
+
+# 运行标准实验配置
+run_two_stage_experiment "JNJ" "2020-07-02" "2020-07-10" "2020-10-01" "2021-05-06"
+run_two_stage_experiment "MSFT" "2020-07-02" "2020-07-10" "2020-10-01" "2021-05-06"  
+run_two_stage_experiment "BTC" "2023-01-19" "2023-04-04" "2023-04-05" "2023-11-05"
+run_two_stage_experiment "ETH" "2023-01-19" "2023-04-02" "2023-04-03" "2023-11-05"
+```
 
 ### 批量回测多个时间段
 ```bash

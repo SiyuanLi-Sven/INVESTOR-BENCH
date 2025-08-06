@@ -1,346 +1,261 @@
+# INVESTOR-BENCH v2.0
+
 全部代码来自fork的仓库. 此处是本人学习与自用版本. 
 
-# INVESTOR-BENCH
-
-基于OpenAI兼容API的智能投资回测系统，支持完整的四层记忆系统和LLM驱动的交易决策。
+基于LLM的智能投资回测系统 - 统一OpenAI SDK接口版本
 
 ## 🚀 快速开始
 
-### 环境准备
+### 安装依赖
 ```bash
-# 安装依赖
-pip install -r requirements.txt
+pip install openai python-dotenv loguru httpx pandas numpy
+```
 
-# 启动向量数据库
-docker run -d -p 6333:6333 --name qdrant qdrant/qdrant
+### 配置API密钥
+```bash
+# 方法1: 环境变量 (推荐)
+export OPENAI_API_KEY="sk-your-api-key"
+export OPENAI_API_BASE="https://api.siliconflow.cn/v1"
 
-# 配置API密钥
-echo 'OPENAI_API_KEY="sk-your-key-here"' > .env
+# 方法2: .env文件
+echo 'OPENAI_API_KEY="sk-your-api-key"' > .env
 echo 'OPENAI_API_BASE="https://api.siliconflow.cn/v1"' >> .env
+```
+
+### 快速演示
+```bash
+# 一键运行完整的两阶段实验演示
+./quick_demo.sh
 ```
 
 ### 运行回测
 ```bash
-# 生成配置
-pkl eval -f json -o configs/main.json configs/main.pkl
+# 基础用法 - 使用环境变量配置
+python investor_bench.py --symbol JNJ --start-date 2020-07-02 --end-date 2020-07-10
 
-# 执行完整回测流程
-python run.py warmup    # 学习阶段
-python run.py test      # 回测阶段  
-python run.py eval      # 结果分析
+# 完整两阶段实验 (推荐)
+# 阶段1: Warmup
+python investor_bench.py --symbol JNJ --start-date 2020-07-02 --end-date 2020-07-10 --mode warmup
+# 阶段2: Test  
+python investor_bench.py --symbol JNJ --start-date 2020-10-01 --end-date 2021-05-06 --mode test
+
+# 指定模型和API
+python investor_bench.py --symbol AAPL --model gpt-4 --api-key sk-xxx --api-base https://api.openai.com/v1
+
+# 本地部署模型 (vLLM)
+python investor_bench.py --symbol TSLA --model llama-3.1-8b --api-base http://localhost:8000/v1 --api-key fake
 ```
 
-## 📋 快速CLI参考
+## 📋 命令行参数
 
-| 命令 | 功能 | 说明 |
-|------|------|------|
-| `python run.py warmup` | 学习阶段 | AI从专业交易员建议中学习 |
-| `python run.py warmup-checkpoint` | 恢复学习 | 从检查点继续warmup |
-| `python run.py test` | 回测阶段 | 基于记忆进行独立投资决策 |
-| `python run.py test-checkpoint` | 恢复回测 | 从检查点继续test |
-| `python run.py eval` | 结果分析 | 生成CSV报告和Markdown分析 |
-| `python test_api.py` | API测试 | 测试Chat API连通性 |
-| `python test_embedding.py` | Embedding测试 | 测试Embedding API功能 |
-| `pkl eval -f json -o configs/main.json configs/main.pkl` | 生成配置 | 将PKL配置转换为JSON |
+### 必需参数
+- `--symbol`: 股票代码 (如: JNJ, AAPL, TSLA)
+- `--start-date`: 开始日期 (YYYY-MM-DD格式)
+- `--end-date`: 结束日期 (YYYY-MM-DD格式)
 
-## 🎯 核心特性
+### 可选参数
+- `--mode`: 运行模式 (backtest, warmup, test) - 默认: backtest
+- `--model`: LLM模型名称 - 默认: Qwen/Qwen3-8B
+- `--api-key`: OpenAI API密钥 (覆盖环境变量)
+- `--api-base`: API基础URL (覆盖环境变量)
+- `--verbose, -v`: 启用详细输出
 
-### 四层记忆系统
-- **短期记忆** (1-7天): 日常新闻、价格波动
-- **中期记忆** (1周-3月): 季报分析、行业趋势  
-- **长期记忆** (3月以上): 基本面知识、历史经验
-- **反思记忆** (持久): 投资哲学、策略总结
+## 📅 重要说明：Warmup vs Test 模式
 
-### OpenAI兼容API支持
-- ✅ **SiliconFlow** - Qwen3-8B + Qwen3-Embedding-4B (已验证)
-- ✅ **OpenAI** - GPT-4, text-embedding-3-large
-- ✅ **Anthropic** - Claude-3.5-Sonnet (需外部embedding)
-- ✅ **本地部署** - 通过vLLM/Ollama等
+⚠️ **重要澄清**: 当前简化版本(`investor_bench.py`)中的warmup和test模式是**概念性的**，实际上是两个独立的回测运行，没有状态或知识的传递。
 
-### 完整投资组合管理
-- 单资产和多资产策略支持
-- 详细交易记录和证据链
-- 关键性能指标计算
-- 检查点保存和恢复机制
+### 🔄 当前版本的模式区别
 
-## 📊 系统架构
+#### 简化版本 (`python investor_bench.py --mode warmup/test`)
+- **Warmup模式**: 独立的回测运行，使用早期日期数据
+- **Test模式**: 独立的回测运行，使用后期日期数据  
+- **状态传递**: ❌ 无状态传递，每次运行都重新开始
+- **记忆系统**: 简化的内存记忆，不持久化
+- **适用场景**: 快速验证、简单对比分析
+
+#### 完整版本 (`python run.py warmup` + `python run.py test`)
+- **Warmup阶段**: 真正的学习期，建立四层记忆系统和知识库
+- **Test阶段**: 基于warmup学到的知识进行决策，有状态传递
+- **状态传递**: ✅ 完整的checkpoint和记忆系统传递
+- **记忆系统**: Qdrant向量数据库 + 四层记忆架构
+- **适用场景**: 严格的学术研究、完整的AI投资系统验证
+
+#### 增强版本 (`python run_enhanced.py`) - 🆕 推荐
+- **特点**: 结合完整记忆系统 + 现代化输出风格
+- **状态传递**: ✅ 真正的warmup→test知识传递
+- **输出**: 🎨 用户友好的emoji和进度显示
+- **API调用**: 🔧 统一的OpenAI SDK接口，支持多种服务商
+- **使用方式**:
+  ```bash
+  # 分步执行
+  python run_enhanced.py warmup --symbol JNJ --start-date 2020-03-12 --end-date 2020-03-13
+  python run_enhanced.py test --symbol JNJ --test-start-date 2020-03-16 --test-end-date 2020-03-17
+  
+  # 一键执行完整流程
+  python run_enhanced.py both --symbol JNJ --start-date 2020-03-12 --end-date 2020-03-13 --test-start-date 2020-03-16 --test-end-date 2020-03-17
+  ```
+
+### 🎯 如何选择版本
+
+1. **快速测试和学习**: 使用简化版本 `investor_bench.py`
+2. **最佳体验**: 使用增强版本 `run_enhanced.py` (🆕 推荐)
+3. **学术研究**: 使用完整版本 `run.py` (原始框架)
+
+### 📊 推荐的日期配置
+
+基于数据质量和市场重要事件，推荐以下测试日期：
+
+| 资产类型 | 股票代码 | Warmup期间 | Test期间 | 说明 |
+|---------|---------|-----------|----------|------|
+| **传统股票** | JNJ | 2020-07-02 至 2020-07-10 | 2020-10-01 至 2021-05-06 | 涵盖疫情期间医药股表现 |
+| **科技股** | MSFT | 2020-07-02 至 2020-07-10 | 2020-10-01 至 2021-05-06 | 科技股在疫情中的表现 |
+| **比特币** | BTC | 2023-01-19 至 2023-04-04 | 2023-04-05 至 2023-11-05 | 加密货币波动期分析 |
+| **以太坊** | ETH | 2023-01-19 至 2023-04-02 | 2023-04-03 至 2023-11-05 | 以太坊生态发展期 |
+| **ETF** | ETF | 2019-07-29 至 2019-12-30 | 2020-01-02 至 2020-09-21 | 传统ETF表现测试 |
+
+### 💡 使用建议
+1. **新手**: 建议从JNJ开始，数据质量高且波动适中
+2. **短期测试**: 可以缩短日期范围进行快速验证
+3. **研究导向**: 选择特定的市场事件期间进行深入分析
+
+## 📊 输出结构
+
+每次运行会在`results/`目录下创建带时间戳的目录：
 
 ```
-数据输入 → MarketEnv环境模拟 → FinMemAgent智能代理 → 记忆系统
-                                        ↓
-投资组合管理 ← LLM决策引擎 ← 记忆检索 ← Qdrant向量数据库
-    ↓
-结果输出 (CSV + Markdown报告)
+results/
+└── 241205_143022_Qwen_Qwen3-8B_JNJ/
+    ├── metadata.json          # 运行元数据和统计
+    ├── run.log               # 详细运行日志
+    ├── results.json          # 完整结果数据
+    ├── trading_results.csv   # 交易记录CSV
+    └── analysis_report.md    # 分析报告
 ```
 
-## 📚 详细文档
+### metadata.json 包含内容
+- 运行信息 (时间、命令行、持续时间)
+- 配置参数 (模型、API、日期范围等)
+- API使用统计 (调用次数、Token消耗、错误次数)
+- 系统信息 (Python版本、平台等)
 
-完整的项目文档位于 `docs/` 目录：
+## 🎯 支持的API服务商
 
-- [快速开始指南](./docs/quick-start.md) - 5分钟上手教程
-- [系统架构](./docs/architecture.md) - 深入理解系统设计
-- [API集成指南](./docs/api-integration.md) - 多种API服务商集成
-- [记忆系统设计](./docs/memory-system.md) - 四层记忆系统详解
-- [CLI命令参考](./docs/cli-reference.md) - 完整命令行使用说明
-- [故障排除指南](./docs/troubleshooting.md) - 常见问题解决方案
-
-## 🔧 配置示例
-
-### SiliconFlow API配置
+### 1. SiliconFlow (默认)
 ```bash
-# .env文件
-OPENAI_API_KEY="sk-your-siliconflow-key"
-OPENAI_API_BASE="https://api.siliconflow.cn/v1"
-OPENAI_MODEL="Qwen/Qwen3-8B"
-EMBEDDING_MODEL="Qwen/Qwen3-Embedding-4B"
+export OPENAI_API_BASE="https://api.siliconflow.cn/v1"
+export OPENAI_API_KEY="sk-your-siliconflow-key"
 ```
 
-### 自定义交易资产
-```pkl
-// configs/main.pkl中修改
-trading_symbols = new Listing {
-    "AAPL"   // Apple
-    "GOOGL"  // Google  
-    "MSFT"   // Microsoft
-}
-```
-
-### 调整时间范围
-```pkl
-warmup_start_time = "2020-01-01"
-warmup_end_time = "2020-06-30"
-test_start_time = "2020-07-01"
-test_end_time = "2020-12-31"
-```
-
-## 🎯 运行示例
-
-当前系统正在运行JNJ（强生）的回测示例：
-- **测试期间**: 2020-07-02 至 2020-07-10 (短期验证)
-- **使用模型**: Qwen3-8B (SiliconFlow API)
-- **记忆系统**: 四层记忆完全启用
-- **实时状态**: 正在进行LLM交易决策分析
-
-## 📈 预期输出
-
-系统将生成以下结果文件：
-- `results/exp/qwen3-8b-siliconflow/JNJ/final_result/` - CSV交易记录
-- `results/exp/qwen3-8b-siliconflow/JNJ/final_result/` - Markdown分析报告
-- `results/exp/qwen3-8b-siliconflow/JNJ/log/` - 详细运行日志
-
-## 🤝 贡献
-
-这个项目基于原INVESTOR-BENCH框架，专注于OpenAI兼容API的集成和优化。欢迎提交Issue和Pull Request。
-
-## 📄 许可证
-
-请参考原项目许可证要求。
-
----
-
-## 附录：原项目信息
-
-以下内容保留自原INVESTOR-BENCH项目，供参考：
-
-#### Guardrails Tokens
-
-The [GuardRails](https://github.com/guardrails-ai/guardrails) is used to ensure the output format for closed-sourced models.
-
-If you do not need to evaluate on close-sourced models, comment out the lines 48 - 52 in the [Dockerfile](Dockerfile):
-
+### 2. OpenAI官方
 ```bash
-RUN python -m pip install -r requirements.txt
-RUN python -m pip install guardrails-ai==0.5.13
-RUN guardrails configure --disable-metrics --disable-remote-inferencing --token xxxxx
-RUN guardrails hub install hub://guardrails/valid_choices
+python investor_bench.py --symbol JNJ --model gpt-4 --api-base https://api.openai.com/v1 --api-key sk-xxx
 ```
 
-Otherwise, replace your GuardRails token in line 51 of the [Dockerfile](Dockerfile).
+### 3. 本地vLLM部署
+```bash
+# 启动vLLM服务
+vllm serve meta-llama/Llama-3.1-8B-Instruct --port 8000
 
-### Config
+# 使用本地模型
+python investor_bench.py --symbol JNJ --model meta-llama/Llama-3.1-8B-Instruct --api-base http://localhost:8000/v1 --api-key fake
+```
 
-The configuration in the project is managed by [Pkl](<https://pkl-lang.org/index.html>). The configurations are splitted into two parts: [chat models](</configs/chat_models.pkl>) and [meta config](</configs/main.pkl>).
+### 4. 其他OpenAI兼容服务
+任何支持OpenAI API格式的服务都可以使用，只需设置正确的`--api-base`。
 
-#### Chat Config
+## 📈 功能特性
 
-To deploy a fine-tuned / merged LLM model, please add an entry in the [configs/chat_models.pkl](</configs/chat_models.pkl>) that follows the following format:
+### 智能投资决策
+- LLM驱动的投资分析和决策
+- 基于新闻、价格、历史记忆的综合判断
+- 返回BUY/SELL/HOLD决策及置信度
 
-```pkl
-llama3_1_instruct_8b: ChatModelConfig = new {  # set the identifier for the model
-    chat_model = "meta-llama/Meta-Llama-3.1-8B-Instruct" # set the model name, which is the model path in the Hugging Face Hub
-    chat_model_type = "instruction"  # set the model type, which should be one of the following: instruction, chat, completion.
-    # The completion model type is the similar to meta-llama/Llama-3.1-8B that generates the completion for the input text.
-    chat_model_inference_engine = "vllm"  # keep it as vllm
-    chat_endpoint = null  # keep it null
-    chat_template_path = null  # please see detail in VLLM doc: https://github.com/vllm-project/vllm/blob/main/docs/source/serving/openai_compatible_server.md#chat-template
-    chat_system_message = "You are a helpful assistant."
-    chat_parameters = new Mapping {} # leave it as empty
+### 记忆系统
+- 自动学习和记住重要市场信息
+- 历史决策和市场趋势的上下文保持
+- 支持长期策略优化
+
+### 完整回测与交易指标
+- 模拟投资组合管理
+- 专业交易指标：总收益率、年化收益率、夏普比率、最大回撤、胜率等
+- 风险调整收益分析
+- 生成详细的交易记录和分析报告
+
+### API使用统计
+- 详细的API调用次数和Token消耗统计
+- 成本估算和错误监控
+- 支持多种API服务商的统一管理
+
+## 📂 数据格式
+
+股票数据文件应放在`data/`目录，格式如下：
+
+```json
+[
+  {
+    "date": "2020-07-02",
+    "symbol": "JNJ",
+    "price": 126.30,
+    "news": [
+      "Johnson & Johnson公布积极的疫苗试验结果",
+      "医疗器械部门营收超预期增长"
+    ]
   }
+]
 ```
 
-After adding the entry, the model is also needed to be added in the registry.
+## 🔧 故障排除
 
-```pkl
-chat_model_dict = new Mapping {
-    ["llama-3.1-8b-instruct"] = llama3_1_instruct_8b # [<a short name>] = <model identifier>
-  }
+### 常见问题
+
+1. **API密钥错误**
+   ```bash
+   ❌ API密钥未设置！请通过--api-key参数或OPENAI_API_KEY环境变量提供
+   ```
+   解决：设置正确的API密钥和base URL
+
+2. **数据文件不存在**
+   ```bash
+   ❌ 数据文件不存在: data/jnj.json
+   ```
+   解决：确保数据文件存在且格式正确
+
+3. **API调用失败**
+   检查网络连接和API服务状态，查看`run.log`了解详细错误信息
+
+### 调试模式
+```bash
+python investor_bench.py --symbol JNJ --start-date 2020-07-02 --end-date 2020-07-10 --verbose
 ```
 
-#### Meta Config
+## 🆕 版本更新
 
-The meta config contains the configuration for the framework. The configuration is located at [configs/main.pkl](<"/configs/main.pkl">) from line 9 to line 29, which contains the following information:
+### v2.0.0 特性
+- ✅ 统一OpenAI SDK接口，支持所有兼容服务
+- ✅ 清晰的命令行接口，简单参数启动
+- ✅ 带时间戳的结果目录结构
+- ✅ 完整的metadata.json元数据记录
+- ✅ 专业交易指标计算（夏普比率、最大回撤、胜率等）
+- ✅ 详细的API使用统计和成本监控
+- ✅ 支持本地vLLM模型部署
+- ✅ 清晰的日志和错误处理
+- ✅ 完整的文档系统，包含CLI快速参考
 
-```pkl
-hidden config = new meta.MetaConfig {
-    run_name = "exp"  # the run name can be set to any string
-    agent_name = "finmem_agent"  # also can be set to any string
-    trading_symbols = new Listing {
-            "BTC-USD"  # the trading symbol. In our case, it either be "BTC-USD" or "ETH-USD"
-    }
-    warmup_start_time = "2023-02-11"  # do not change this config
-    warmup_end_time = "2023-03-10"  # do not change this config
-    test_start_time = "2023-03-11"  # do not change this config
-    test_end_time = "2023-04-04"  # do not change this config
-    top_k = 5  # do not change this config
-    look_back_window_size = 3  # do not change this config
-    momentum_window_size = 3  # do not change this config
-    tensor_parallel_size = 2  # set the tensor parallel size for VLLM, usually set to the number of gpus available
-    embedding_model = "text-embedding-3-large"  # do not change this config
-    chat_model = "catMemo"  # the chat model's identifier in the chat model registry
-    chat_vllm_endpoint = "http://0.0.0.0:8000"  # set this to the VLLM server endpoint, default to localhost port 8000
-    chat_parameters = new Mapping {
-        ["temperature"] = 0.6 # do not change this config
-    }
-}
-```
+### 从v1.0迁移
+原有的PKL配置文件和复杂启动脚本已简化为直接的命令行参数。旧版文件已移至`old/`目录。
 
-#### Generate Config
+## 📚 完整文档
 
-1. Install jq
+- **[CLI快速参考](docs/cli-quick-reference.md)** - 常用命令快速查找，可直接复制运行 🚀
+- **[完整文档目录](docs/README.md)** - 系统架构、配置管理、使用指南等详细文档
+- **[快速开始指南](docs/quick-start.md)** - 5分钟上手教程
+- **[API集成指南](docs/api-integration.md)** - 多种API服务商集成方法
+- **[故障排除](docs/troubleshooting.md)** - 常见问题和解决方案
+
+## 📞 获取帮助
 
 ```bash
-sudo apt-get update
-sudo apt-get install jq
+python investor_bench.py --help
 ```
 
-2. Build evaluation docker container.
-
-```bash
-docker build -t devon -f Dockerfile .
-```
-
-3. Compile and generate the configuration file.
-
-```bash
-docker run -it -v .:/workspace --network host devon config
-```
-
-### Deploy Qdrant Vector Database
-
-1. Start a new shell session, the Qdrant server will need to be running in the background.
-
-2. Pull the Qdrant docker image.
-
-```bash
-docker pull qdrant/qdrant
-```
-
-3. Start the Qdrant server.
-
-```bash
-docker run -p 6333:6333 qdrant/qdrant
-```
-
-### Deploy VLLM Server (Optional, not needed for closed model)
-
-1. Start a new shell session, the VLLM server will need to be running in the background.
-
-2. Pull the VLLM docker image.
-
-```bash
-docker pull vllm/vllm-openai:latest
-```
-
-3. Start running the VLLM server.
-
-```bash
-bash scripts/start_vllm.sh
-```
-
-### Running Framework
-
-After deploying the VLLM server and Qdrant vector database, we can run the evaluation framework to assess trading performance. The system need to first be warmed up before running the evaluation framework.
-
-1. Running warm-up.
-
-```bash
-docker run -it -v .:/workspace --network host devon warmup
-```
-
-If the warm-up is interrupted (OpenAI API error, etc.), please use the following command to resume from the last checkpoint.
-
-```bash
-docker run -it -v .:/workspace --network host devon warmup-checkpoint
-```
-
-2. Running testing.
-
-```bash
-docker run -it -v .:/workspace --network host devon test
-```
-
-The test can also be resumed from the last checkpoint.
-
-```bash
-docker run -it -v .:/workspace --network host devon test-checkpoint
-```
-
-3. Generate a metric report.
-
-```bash
-docker run -it -v .:/workspace --network host devon eval
-```
-
-The results will be saved in the `results/<run_name>/<chat_model>/<trading_symbols>/metrics` directory.
-
-## Start & End times
-
-### Equities
-
-#### HON, JNJ, UVV, MSFT
-
-```bash
-warmup_start_time = "2020-07-01"
-warmup_end_time = "2020-09-30"
-test_start_time = "2020-10-01"
-test_end_time = "2021-05-06"
-```
-
-### Cryptocurrencies
-
-#### BTC
-
-```bash
-warmup_start_time = "2023-02-11"
-warmup_end_time = "2023-04-04"
-test_start_time = "2023-04-05"
-test_end_time = "2023-12-19"
-```
-
-#### ETH
-
-```bash
-warmup_start_time = "2023-02-13"
-warmup_end_time = "2023-04-02"
-test_start_time = "2023-04-03"
-test_end_time = "2023-12-19"
-```
-
-#### ETF
-
-```bash
-warmup_start_time = "2019-07-29",
-warmup_end_time = "2019-12-30",
-test_start_time = "2020-01-02",
-test_end_time = "2020-09-21",
-```
+查看完整的参数说明和使用示例。

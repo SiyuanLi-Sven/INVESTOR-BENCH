@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from typing import Any, Callable, Dict, Tuple, Union
 
 import guardrails as gd
@@ -29,6 +30,10 @@ class BaseGuardRailStructureGeneration(StructuredGenerationChatEndPoint):
         self.endpoint = chat_config["chat_endpoint"]
         self.chat_request_timeout = chat_config["chat_request_timeout"]
         self.chat_parameters = chat_config["chat_parameters"]
+        
+        # 添加重试配置
+        self.max_retries = 3
+        self.retry_delay = 5  # 秒
 
         self.chat_end_point_func = self.endpoint_func()
 
@@ -39,13 +44,26 @@ class BaseGuardRailStructureGeneration(StructuredGenerationChatEndPoint):
         self, prompt: Tuple[str, str], schema: Any
     ) -> Union[StructureGenerationFailure, StructureOutputResponse]:
         invest_info_prompt, ask_prompt = prompt
+        
+        # 使用更短的超时时间并添加重试机制
         guard = gd.Guard.from_pydantic(
-            output_class=schema, prompt=ask_prompt, num_reasks=3
+            output_class=schema, prompt=ask_prompt, num_reasks=2  # 减少重试次数
         )
-        endpoint_func = self.endpoint_func()
-        validated_outcomes = guard(
-            llm_api=endpoint_func, prompt_params={"investment_info": invest_info_prompt}
-        )
+        
+        # 创建带有错误处理的端点函数
+        endpoint_func = self._create_robust_endpoint_func()
+        
+        try:
+            validated_outcomes = guard(
+                llm_api=endpoint_func, prompt_params={"investment_info": invest_info_prompt}
+            )
+        except Exception as e:
+            logger.error(f"❌ GuardRails执行失败: {str(e)}")
+            # 如果是超时错误，尝试降级处理
+            if "timeout" in str(e).lower() or "timed out" in str(e).lower():
+                logger.warning("⚠️ 检测到超时错误，尝试降级处理...")
+                return self._fallback_generation(invest_info_prompt, ask_prompt)
+            return StructureGenerationFailure()
 
         validated_output_dicts = {}
         if (validated_outcomes.validated_output is None) or not isinstance(  # type: ignore
@@ -90,7 +108,49 @@ class BaseGuardRailStructureGeneration(StructuredGenerationChatEndPoint):
                 item["memory_index"]
                 for item in validated_output_dicts["reflection_memory_ids"]
             ]
+
         return StructureOutputResponse(**validated_output_dicts_out)
+    
+    def _create_robust_endpoint_func(self) -> Callable[[str], str]:
+        """创建带有重试机制的端点函数"""
+        original_func = self.endpoint_func()
+        
+        def robust_endpoint(prompt: str, **kwargs) -> str:
+            last_error = None
+            
+            for attempt in range(self.max_retries):
+                try:
+                    # 使用更短的超时时间（最大5分钟）
+                    short_timeout = min(self.chat_request_timeout, 300)  
+                    
+                    # 临时修改超时设置
+                    original_timeout = self.chat_request_timeout
+                    self.chat_request_timeout = short_timeout
+                    
+                    try:
+                        result = original_func(prompt, **kwargs)
+                        # 恢复原始超时设置
+                        self.chat_request_timeout = original_timeout
+                        return result
+                    finally:
+                        # 确保恢复原始超时设置
+                        self.chat_request_timeout = original_timeout
+                        
+                except Exception as e:
+                    last_error = e
+                    logger.warning(f"⚠️ API调用失败 (尝试 {attempt + 1}/{self.max_retries}): {str(e)}")
+                    
+                    if attempt < self.max_retries - 1:
+                        logger.info(f"💤 等待 {self.retry_delay} 秒后重试...")
+                        time.sleep(self.retry_delay)
+                    
+            # 所有重试都失败了
+            logger.error(f"❌ 所有重试都失败，最后错误: {str(last_error)}")
+            raise last_error
+        
+        return robust_endpoint
+    
+
 
 
 class ClaudeGuardRailStructureGeneration(BaseGuardRailStructureGeneration):

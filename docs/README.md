@@ -16,6 +16,7 @@
 
 ### 使用指南
 - [快速开始](./quick-start.md) - 5分钟上手指南
+- [CLI 快速参考](./cli-quick-reference.md) - 常用命令快速查找，可直接复制运行 🚀
 - [命令行参考](./cli-reference.md) - 完整CLI命令说明
 - [配置示例](./configuration-examples.md) - 各种场景配置模板
 
@@ -36,7 +37,7 @@
 
 ## 🚀 快速导航
 
-**新用户**: 建议按 [环境配置](./environment-setup.md) → [快速开始](./quick-start.md) → [API集成](./api-integration.md) 的顺序阅读
+**新用户**: 建议按 [环境配置](./environment-setup.md) → [快速开始](./quick-start.md) → [CLI快速参考](./cli-quick-reference.md) → [API集成](./api-integration.md) 的顺序阅读
 
 **开发者**: 重点关注 [系统架构](./architecture.md) → [开发指南](./development-guide.md) → [API参考](./api-reference.md)
 

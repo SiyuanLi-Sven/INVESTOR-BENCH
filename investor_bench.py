@@ -473,7 +473,7 @@ class InvestorBench:
         
         for result in results:
             decision = result["decision"]
-            report += f"| {result['date']} | ${result['price']:.2f} | {decision.get('action', 'HOLD')} | {decision.get('confidence', 0):.2f} | ${result['portfolio_value']:,.2f} | {result['daily_return']*100:+.2f}% |\\n"
+            report += f"| {result['date']} | ${result['price']:.2f} | {decision.get('action', 'HOLD')} | {decision.get('confidence', 0):.2f} | ${result['portfolio_value']:,.2f} | {result['daily_return']*100:+.2f}% |\n"
         
         report += f"""
 ## 🧠 AI决策洞察

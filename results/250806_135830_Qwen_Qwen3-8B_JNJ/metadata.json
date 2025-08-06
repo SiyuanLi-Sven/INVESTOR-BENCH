@@ -1,0 +1,21 @@
+{
+  "run_info": {
+    "timestamp": "2025-08-06T13:58:30.055884",
+    "command_line": "run_enhanced.py both --symbol JNJ --start-date 2020-03-12 --end-date 2020-03-13 --test-start-date 2020-03-16 --test-end-date 2020-03-17 --verbose",
+    "duration_seconds": 186.702224,
+    "version": "enhanced_v1.0"
+  },
+  "config": {
+    "symbol": "JNJ",
+    "model": "Qwen/Qwen3-8B",
+    "mode": "both",
+    "start_date": "2020-03-12",
+    "end_date": "2020-03-13"
+  },
+  "api_usage": {
+    "chat_calls": 0,
+    "embedding_calls": 0,
+    "total_tokens": 0,
+    "errors": 0
+  }
+}

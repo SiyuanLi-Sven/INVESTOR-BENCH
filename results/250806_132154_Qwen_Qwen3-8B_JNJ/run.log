@@ -1,0 +1,247 @@
+2025-08-06 13:21:54.689 | INFO | 🔧 OpenAI客户端配置:
+2025-08-06 13:21:54.689 | INFO |    模型: Qwen/Qwen3-8B
+2025-08-06 13:21:54.689 | INFO |    API Base: https://api.siliconflow.cn/v1
+2025-08-06 13:21:54.689 | INFO |    API Key: sk-dovbcvo...
+2025-08-06 13:21:54.712 | INFO | 🚀 INVESTOR-BENCH增强版启动 - 运行目录: results/250806_132154_Qwen_Qwen3-8B_JNJ
+2025-08-06 13:21:54.712 | INFO | 🚀 运行完整的Warmup→Test流程
+2025-08-06 13:21:54.712 | INFO | 🎯 开始Warmup阶段 - 学习期
+2025-08-06 13:21:54.712 | INFO | Path created: results/250806_132154_Qwen_Qwen3-8B_JNJ/warmup_checkpoint
+2025-08-06 13:21:54.712 | INFO | Path created: results/250806_132154_Qwen_Qwen3-8B_JNJ/warmup_output
+2025-08-06 13:21:54.713 | INFO | Path created: results/250806_132154_Qwen_Qwen3-8B_JNJ/log
+2025-08-06 13:21:54.713 | INFO | ENV-Creating MarketEnvironment with params: env_data_pkl {'JNJ': 'data/jnj.json'}, start_date 2020-03-12, end_date 2020-03-13, symbol ['JNJ']
+2025-08-06 13:21:54.716 | INFO | ENV-Final date series (intersection): [datetime.date(2020, 3, 12), datetime.date(2020, 3, 13)]
+2025-08-06 13:21:54.716 | INFO | ENV-Simulation-Length: 2
+2025-08-06 13:21:54.716 | INFO | SYS-Initializing FinMemAgent
+2025-08-06 13:21:54.716 | TRACE | CONFIG-agent config: {agent_config}
+2025-08-06 13:21:54.716 | TRACE | CONFIG-emb config: {emb_config}
+2025-08-06 13:21:54.716 | TRACE | CONFIG-chat config: {chat_config}
+2025-08-06 13:21:54.716 | TRACE | CONFIG-portfolio config: {portfolio_config}
+2025-08-06 13:21:54.716 | INFO | SYS-Initializing MemoryDB
+2025-08-06 13:21:54.716 | TRACE | EMB-Initializing OpenAIEmbedding with config: {'emb_model_name': 'Qwen/Qwen3-Embedding-4B', 'request_endpoint': 'https://api.siliconflow.cn/v1//embeddings', 'emb_size': 2560, 'embedding_timeout': 600}
+2025-08-06 13:21:54.728 | TRACE | Connect to Qdrant established
+2025-08-06 13:21:54.733 | TRACE | SYS-Collection agent already exists, deleting
+2025-08-06 13:21:54.745 | TRACE | SYS-Create collection agent, emb_size: 2560
+2025-08-06 13:21:54.785 | TRACE | SYS-Initializing IDGenerator, with init id: 0
+2025-08-06 13:21:54.785 | TRACE | SYS-Initializing chat model, prompt, and schema
+2025-08-06 13:21:54.785 | TRACE | SYS-Configuring memory settings
+2025-08-06 13:21:54.785 | TRACE | AGENT-Configuring short memory settings: {'db_name': 'short', 'importance_init_val': 50.0, 'decay_recency_factor': 3.0, 'decay_importance_factor': 0.92, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_upper_threshold': 55.0}
+2025-08-06 13:21:54.785 | TRACE | AGENT-Configuring mid memory settings: {'db_name': 'mid', 'importance_init_val': 60.0, 'decay_recency_factor': 90.0, 'decay_importance_factor': 0.96, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_lower_threshold': 55.0, 'jump_upper_threshold': 85.0}
+2025-08-06 13:21:54.785 | TRACE | AGENT-Configuring long memory settings: {'db_name': 'long', 'importance_init_val': 90.0, 'decay_recency_factor': 365.0, 'decay_importance_factor': 0.96, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_lower_threshold': 85.0}
+2025-08-06 13:21:54.785 | TRACE | AGENT-Configuring reflection memory settings: {'db_name': 'reflection', 'importance_init_val': 80.0, 'decay_recency_factor': 365.0, 'decay_importance_factor': 0.98, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'similarity_threshold': 0.95}
+2025-08-06 13:21:54.785 | TRACE | AGENT-Constant access counter update function, step: 18.0
+2025-08-06 13:21:54.785 | TRACE | AGENT-Linear compound score, upper bound: 100.0
+2025-08-06 13:21:54.785 | TRACE | AGENT-Short memory importance init val: 50.0
+2025-08-06 13:21:54.785 | TRACE | AGENT-Short memory recency constant init from 1
+2025-08-06 13:21:54.785 | TRACE | AGENT-Short memory importance decay, with factor: 0.92
+2025-08-06 13:21:54.785 | TRACE | AGENT-Short memory recency decay, with factor: 3.0
+2025-08-06 13:21:54.785 | TRACE | AGENT-Mid memory importance init val: 60.0
+2025-08-06 13:21:54.785 | TRACE | AGENT-Mid memory recency constant init from 1
+2025-08-06 13:21:54.785 | TRACE | AGENT-Mid memory importance decay, with factor: 0.96
+2025-08-06 13:21:54.785 | TRACE | AGENT-Mid memory recency decay, with factor: 90.0
+2025-08-06 13:21:54.785 | TRACE | AGENT-Long memory importance init val: 90.0
+2025-08-06 13:21:54.786 | TRACE | AGENT-Long memory recency constant init from 1
+2025-08-06 13:21:54.786 | TRACE | AGENT-Long memory importance decay, with factor: 0.96
+2025-08-06 13:21:54.786 | TRACE | AGENT-Long memory recency decay, with factor: 365.0
+2025-08-06 13:21:54.786 | TRACE | AGENT-Reflection memory importance init val: 80.0
+2025-08-06 13:21:54.786 | TRACE | AGENT-Reflection memory recency constant init from 1
+2025-08-06 13:21:54.786 | TRACE | AGENT-Reflection memory importance decay, with factor: 0.98
+2025-08-06 13:21:54.786 | TRACE | AGENT-Reflection memory recency decay, with factor: 365.0
+2025-08-06 13:21:54.786 | TRACE | AGENT-Clean up threshold dict: {'short': {'importance': 5.0, 'recency': 0.05}, 'mid': {'importance': 5.0, 'recency': 0.05}, 'long': {'importance': 5.0, 'recency': 0.05}, 'reflection': {'importance': 5.0, 'recency': 0.05}}
+2025-08-06 13:21:54.786 | TRACE | AGENT-Jump threshold dict: {'short': {'upper': 55.0}, 'mid': {'upper': 85.0, 'lower': 55.0}, 'long': {'lower': 85.0}}
+2025-08-06 13:21:54.786 | TRACE | AGENT-Constructed queries: {'query_records': [{'query_text': 'You are an investment expert specializing in JNJ.', 'k': 5, 'symbol': 'JNJ'}]}
+2025-08-06 13:21:54.786 | INFO | SYS-Portfolio type: single-asset
+2025-08-06 13:21:54.786 | TRACE | PORTFOLIO: trading symbol: JNJ
+2025-08-06 13:21:54.786 | TRACE | PORTFOLIO: look back window size: 3
+2025-08-06 13:21:54.786 | TRACE | PORTFOLIO: initial position: AssetPosition.NEUTRAL
+2025-08-06 13:21:54.786 | INFO | 📊 Warmup数据范围: 2天, 2020-03-12 至 2020-03-13
+2025-08-06 13:21:54.786 | INFO | ENV- current date: 2020-03-12, future date: 2020-03-13
+2025-08-06 13:21:54.786 | INFO | ENV-Current price: {'JNJ': 111.58531188964844}, future price diff: {'JNJ': -0.07080763942400062}
+2025-08-06 13:21:54.786 | INFO | ENV-Current news: {'JNJ': None}
+2025-08-06 13:21:54.786 | INFO | ENV-Current filing_k: {'JNJ': None}
+2025-08-06 13:21:54.787 | INFO | ENV-Current filing_q: {'JNJ': None}
+2025-08-06 13:21:54.787 | INFO | ENV-Current momentum: {'JNJ': None}
+2025-08-06 13:21:54.787 | INFO | ENV-Current symbol: ['JNJ']
+2025-08-06 13:21:54.787 | INFO | 📅 处理第1/2天: 2020-03-12
+2025-08-06 13:21:54.787 | INFO | 🧠 分析 JNJ - 2020-03-12
+2025-08-06 13:21:54.787 | INFO | AGENT-Step, date: 2020-03-12, run mode: RunMode.WARMUP, task type: TaskType.SingleAsset
+2025-08-06 13:21:54.787 | INFO | AGENT-Handling new information
+2025-08-06 13:21:54.787 | TRACE | AGENT-Handling news information
+2025-08-06 13:21:54.787 | INFO | AGENT-Querying memories
+2025-08-06 13:21:54.799 | TRACE | EMB-Calling OpenAIEmbedding with model: Qwen/Qwen3-Embedding-4B, endpoint: https://api.siliconflow.cn/v1//embeddings
+2025-08-06 13:21:55.740 | TRACE | EMB-OpenAIEmbedding success response
+2025-08-06 13:21:55.782 | TRACE | EMB-Calling OpenAIEmbedding with model: Qwen/Qwen3-Embedding-4B, endpoint: https://api.siliconflow.cn/v1//embeddings
+2025-08-06 13:21:56.239 | TRACE | EMB-OpenAIEmbedding success response
+2025-08-06 13:21:56.271 | TRACE | EMB-Calling OpenAIEmbedding with model: Qwen/Qwen3-Embedding-4B, endpoint: https://api.siliconflow.cn/v1//embeddings
+2025-08-06 13:21:56.595 | TRACE | EMB-OpenAIEmbedding success response
+2025-08-06 13:21:56.637 | TRACE | EMB-Calling OpenAIEmbedding with model: Qwen/Qwen3-Embedding-4B, endpoint: https://api.siliconflow.cn/v1//embeddings
+2025-08-06 13:21:56.947 | TRACE | EMB-OpenAIEmbedding success response
+2025-08-06 13:21:56.960 | INFO | ##################################################
+2025-08-06 13:21:56.961 | INFO | AGENT-Queried memories for symbol: JNJ
+2025-08-06 13:21:56.961 | INFO | AGENT-Single asset task
+2025-08-06 13:21:56.961 | TRACE | AGENT-Constructed prompt
+2025-08-06 13:21:56.962 | TRACE | AGENT-Constructed schema
+2025-08-06 13:22:00.044 | INFO | LLM API Request sent
+2025-08-06 13:23:38.259 | INFO | LLM API Request successful
+2025-08-06 13:23:40.270 | INFO | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-08-06 13:23:40.273 | TRACE | MEM-Adding memories: memory_records=[MemorySingle(id=1, symbol='JNJ', date=datetime.date(2020, 3, 12), text='Negative financial sentiment leading to selling pressures, as indicated in the short-term information analysis.')]
+2025-08-06 13:23:40.304 | TRACE | EMB-Calling OpenAIEmbedding with model: Qwen/Qwen3-Embedding-4B, endpoint: https://api.siliconflow.cn/v1//embeddings
+2025-08-06 13:23:40.697 | TRACE | EMB-OpenAIEmbedding success response
+2025-08-06 13:23:40.719 | TRACE | MEM-Adding memory: id: 1, symbol: JNJ, date: 2020-03-12, delta: 0, importance: 80.0, recency: 1.0, access_counter: 0, layer: reflection
+2025-08-06 13:23:40.742 | TRACE | MEM-Adding memories finished
+2025-08-06 13:23:40.742 | INFO | AGENT-action: TradeAction.SELL
+2025-08-06 13:23:40.743 | INFO | AGENT-summary reason: Negative financial sentiment leading to selling pressures, as indicated in the short-term information analysis.
+2025-08-06 13:23:40.743 | TRACE | PORTFOLIO: position transition: AssetPosition.NEUTRAL -> AssetPosition.SHORT by action: TradeAction.SELL
+2025-08-06 13:23:40.743 | TRACE | PORTFOLIO: position deque: deque([-1], maxlen=3)
+2025-08-06 13:23:40.743 | TRACE | PORTFOLIO: price deque: deque([111.58531188964844], maxlen=4)
+2025-08-06 13:23:40.743 | TRACE | PORTFOLIO: evidence deque: deque([[1]], maxlen=3)
+2025-08-06 13:23:40.743 | INFO | AGENT-feedback: {'access_counter_records': []}
+2025-08-06 13:23:40.806 | TRACE | MEM-Flowing memories
+2025-08-06 13:23:40.807 | TRACE | MEM-Short up memory
+2025-08-06 13:23:40.809 | TRACE | MEM-Mid down memory
+2025-08-06 13:23:40.810 | TRACE | MEM-Mid up memory
+2025-08-06 13:23:40.811 | TRACE | MEM-Long down memory
+2025-08-06 13:23:40.812 | TRACE | MEM-Short up memory
+2025-08-06 13:23:40.813 | TRACE | MEM-Mid down memory
+2025-08-06 13:23:40.814 | TRACE | MEM-Mid up memory
+2025-08-06 13:23:40.815 | TRACE | MEM-Long down memory
+2025-08-06 13:23:40.815 | INFO | 🎓 Warmup学习: 正在学习市场信息和新闻
+2025-08-06 13:23:40.815 | INFO | 📝 当前价格: $111.59
+2025-08-06 13:23:40.815 | INFO | 💡 学习进度: 1/2 (50.0%)
+2025-08-06 13:23:40.815 | INFO | ------------------------------------------------------------
+2025-08-06 13:23:40.815 | ERROR | ENV-Date series exhausted
+2025-08-06 13:23:40.817 | INFO | 💾 保存Warmup结果...
+2025-08-06 13:23:40.817 | INFO | Path created: results/250806_132154_Qwen_Qwen3-8B_JNJ/warmup_checkpoint/agent/memory_db/brain
+2025-08-06 13:23:40.823 | INFO | ENV-Saving environment to results/250806_132154_Qwen_Qwen3-8B_JNJ/warmup_checkpoint/env
+2025-08-06 13:23:40.824 | INFO | Path created: results/250806_132154_Qwen_Qwen3-8B_JNJ/warmup_checkpoint/env
+2025-08-06 13:23:40.824 | INFO | ENV-Environment saved to results/250806_132154_Qwen_Qwen3-8B_JNJ/warmup_checkpoint/env
+2025-08-06 13:23:40.824 | INFO | Path created: results/250806_132154_Qwen_Qwen3-8B_JNJ/warmup_output/agent/memory_db/brain
+2025-08-06 13:23:40.829 | INFO | ✅ Warmup阶段完成！
+2025-08-06 13:23:40.829 | INFO | 📁 Warmup结果保存在: results/250806_132154_Qwen_Qwen3-8B_JNJ/warmup_output
+2025-08-06 13:23:40.830 | INFO | ⏭️ Warmup完成，开始Test阶段...
+2025-08-06 13:23:40.830 | INFO | 🎯 开始Test阶段 - 实战期
+2025-08-06 13:23:40.830 | INFO | 📂 从Warmup结果加载AI状态: results/250806_131735_Qwen_Qwen3-8B_JNJ/warmup_output/agent
+2025-08-06 13:23:40.830 | INFO | Path created: results/250806_132154_Qwen_Qwen3-8B_JNJ/test_checkpoint
+2025-08-06 13:23:40.830 | INFO | Path created: results/250806_132154_Qwen_Qwen3-8B_JNJ/test_output
+2025-08-06 13:23:40.831 | INFO | Path created: results/250806_132154_Qwen_Qwen3-8B_JNJ/final_result
+2025-08-06 13:23:40.831 | INFO | ENV-Creating MarketEnvironment with params: env_data_pkl {'JNJ': 'data/jnj.json'}, start_date 2020-03-16, end_date 2020-03-17, symbol ['JNJ']
+2025-08-06 13:23:40.833 | INFO | ENV-Final date series (intersection): [datetime.date(2020, 3, 16), datetime.date(2020, 3, 17)]
+2025-08-06 13:23:40.833 | INFO | ENV-Simulation-Length: 2
+2025-08-06 13:23:40.833 | INFO | SYS-Initializing FinMemAgent
+2025-08-06 13:23:40.833 | TRACE | CONFIG-agent config: {agent_config}
+2025-08-06 13:23:40.833 | TRACE | CONFIG-emb config: {emb_config}
+2025-08-06 13:23:40.833 | TRACE | CONFIG-chat config: {chat_config}
+2025-08-06 13:23:40.833 | TRACE | CONFIG-portfolio config: {portfolio_config}
+2025-08-06 13:23:40.833 | INFO | SYS-Initializing MemoryDB
+2025-08-06 13:23:40.833 | TRACE | EMB-Initializing OpenAIEmbedding with config: {'emb_model_name': 'Qwen/Qwen3-Embedding-4B', 'request_endpoint': 'https://api.siliconflow.cn/v1//embeddings', 'emb_size': 2560, 'embedding_timeout': 600}
+2025-08-06 13:23:40.847 | TRACE | Connect to Qdrant established
+2025-08-06 13:23:40.849 | TRACE | SYS-Collection agent already exists, deleting
+2025-08-06 13:23:40.855 | TRACE | SYS-Create collection agent, emb_size: 2560
+2025-08-06 13:23:40.897 | TRACE | SYS-Initializing IDGenerator, with init id: 0
+2025-08-06 13:23:40.897 | TRACE | SYS-Initializing chat model, prompt, and schema
+2025-08-06 13:23:40.897 | TRACE | SYS-Configuring memory settings
+2025-08-06 13:23:40.897 | TRACE | AGENT-Configuring short memory settings: {'db_name': 'short', 'importance_init_val': 50.0, 'decay_recency_factor': 3.0, 'decay_importance_factor': 0.92, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_upper_threshold': 55.0}
+2025-08-06 13:23:40.897 | TRACE | AGENT-Configuring mid memory settings: {'db_name': 'mid', 'importance_init_val': 60.0, 'decay_recency_factor': 90.0, 'decay_importance_factor': 0.96, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_lower_threshold': 55.0, 'jump_upper_threshold': 85.0}
+2025-08-06 13:23:40.897 | TRACE | AGENT-Configuring long memory settings: {'db_name': 'long', 'importance_init_val': 90.0, 'decay_recency_factor': 365.0, 'decay_importance_factor': 0.96, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_lower_threshold': 85.0}
+2025-08-06 13:23:40.897 | TRACE | AGENT-Configuring reflection memory settings: {'db_name': 'reflection', 'importance_init_val': 80.0, 'decay_recency_factor': 365.0, 'decay_importance_factor': 0.98, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'similarity_threshold': 0.95}
+2025-08-06 13:23:40.897 | TRACE | AGENT-Constant access counter update function, step: 18.0
+2025-08-06 13:23:40.898 | TRACE | AGENT-Linear compound score, upper bound: 100.0
+2025-08-06 13:23:40.898 | TRACE | AGENT-Short memory importance init val: 50.0
+2025-08-06 13:23:40.898 | TRACE | AGENT-Short memory recency constant init from 1
+2025-08-06 13:23:40.898 | TRACE | AGENT-Short memory importance decay, with factor: 0.92
+2025-08-06 13:23:40.898 | TRACE | AGENT-Short memory recency decay, with factor: 3.0
+2025-08-06 13:23:40.898 | TRACE | AGENT-Mid memory importance init val: 60.0
+2025-08-06 13:23:40.898 | TRACE | AGENT-Mid memory recency constant init from 1
+2025-08-06 13:23:40.898 | TRACE | AGENT-Mid memory importance decay, with factor: 0.96
+2025-08-06 13:23:40.898 | TRACE | AGENT-Mid memory recency decay, with factor: 90.0
+2025-08-06 13:23:40.898 | TRACE | AGENT-Long memory importance init val: 90.0
+2025-08-06 13:23:40.898 | TRACE | AGENT-Long memory recency constant init from 1
+2025-08-06 13:23:40.898 | TRACE | AGENT-Long memory importance decay, with factor: 0.96
+2025-08-06 13:23:40.898 | TRACE | AGENT-Long memory recency decay, with factor: 365.0
+2025-08-06 13:23:40.898 | TRACE | AGENT-Reflection memory importance init val: 80.0
+2025-08-06 13:23:40.898 | TRACE | AGENT-Reflection memory recency constant init from 1
+2025-08-06 13:23:40.898 | TRACE | AGENT-Reflection memory importance decay, with factor: 0.98
+2025-08-06 13:23:40.898 | TRACE | AGENT-Reflection memory recency decay, with factor: 365.0
+2025-08-06 13:23:40.898 | TRACE | AGENT-Clean up threshold dict: {'short': {'importance': 5.0, 'recency': 0.05}, 'mid': {'importance': 5.0, 'recency': 0.05}, 'long': {'importance': 5.0, 'recency': 0.05}, 'reflection': {'importance': 5.0, 'recency': 0.05}}
+2025-08-06 13:23:40.898 | TRACE | AGENT-Jump threshold dict: {'short': {'upper': 55.0}, 'mid': {'upper': 85.0, 'lower': 55.0}, 'long': {'lower': 85.0}}
+2025-08-06 13:23:40.898 | TRACE | AGENT-Constructed queries: {'query_records': [{'query_text': 'You are an investment expert specializing in JNJ.', 'k': 5, 'symbol': 'JNJ'}]}
+2025-08-06 13:23:40.898 | INFO | SYS-Portfolio type: single-asset
+2025-08-06 13:23:40.898 | TRACE | PORTFOLIO: trading symbol: JNJ
+2025-08-06 13:23:40.898 | TRACE | PORTFOLIO: look back window size: 3
+2025-08-06 13:23:40.898 | TRACE | PORTFOLIO: initial position: AssetPosition.NEUTRAL
+2025-08-06 13:23:40.898 | TRACE | SYS-Initializing IDGenerator, with init id: 1
+2025-08-06 13:23:40.899 | INFO | SYS-Initializing MemoryDB
+2025-08-06 13:23:40.899 | TRACE | EMB-Initializing OpenAIEmbedding with config: {'emb_model_name': 'Qwen/Qwen3-Embedding-4B', 'request_endpoint': 'https://api.siliconflow.cn/v1//embeddings', 'emb_size': 2560, 'embedding_timeout': 600}
+2025-08-06 13:23:40.914 | TRACE | Connect to Qdrant established
+2025-08-06 13:23:40.917 | TRACE | SYS-Collection agent already exists, deleting
+2025-08-06 13:23:40.919 | TRACE | SYS-Create collection agent, emb_size: 2560
+2025-08-06 13:23:40.951 | INFO | 📊 Test数据范围: 2天, 2020-03-16 至 2020-03-17
+2025-08-06 13:23:40.951 | INFO | ENV- current date: 2020-03-16, future date: 2020-03-17
+2025-08-06 13:23:40.951 | INFO | ENV-Current price: {'JNJ': 113.11568450927734}, future price diff: {'JNJ': -0.07441216449229845}
+2025-08-06 13:23:40.951 | INFO | ENV-Current news: {'JNJ': ["Convert Group, a Greek technology firm, has developed a solution to address the availability and price fluctuations of COVID-19 sensitive products in online pharmacies and groceries, which has been successfully implemented in Italy, Spain, and Greece. The company is now offering this solution globally under an Enterprise Software-as-a-Service model, enabling manufacturers to gain visibility on their digital shelf presence. This technology is particularly relevant for major Consumer Healthcare and FMCG firms, including Johnson & Johnson (JNJ), which is one of the partners. The platform's rapid setup, driven by AI and machine learning, allows for quick adaptation to market demands, which have surged significantly for COVID-19 related products. This development could enhance JNJ's ability to manage product availability and pricing, potentially leading to improved market performance during the pandemic. (Sentiment: positive)", "The new research report by Safe Kids Worldwide, supported by Johnson & Johnson Consumer Inc., reveals that over 47,000 children under age 6 are seen in emergency rooms annually for medicine poisoning, equating to five children every hour. The report highlights common misconceptions about medicine safety and provides actionable steps for parents to prevent such incidents, emphasizing the importance of storing medicine out of children's reach and using child-resistant packaging. This underscores the critical role of Johnson & Johnson's consumer health products in addressing child safety, potentially enhancing the company's brand reputation and consumer trust. The findings may drive increased demand for child-resistant packaging and safety-focused products, presenting a growth opportunity for Johnson & Johnson. Investors should consider the positive impact of these safety initiatives on J&J's market position and long-term profitability. (Sentiment: positive)", "Centinel Spine, LLC has appointed Steven F. Murray as CEO, effective March 16, 2020, succeeding John J. Viscogliosi. Murray, an industry veteran with over 25 years of experience in orthopedics and 20 years as an executive, was most recently President of Advanced Sterilization Products at Johnson & Johnson. Under Viscogliosi's leadership, Centinel Spine achieved record revenue in 2019 and established significant partnerships, including with Tiger Woods, to enhance public education on spinal disease. The company, known for its pioneering technology in anterior column reconstruction, recently acquired the prodisc Total Disc Replacement Technology Platform, solidifying its position as a leader in both cervical and lumbar motion-preserving and fusion solutions. This leadership change and strategic acquisitions indicate potential growth and innovation, making Centinel Spine a company to watch in the spine industry. (Sentiment: positive)", 'The global smoking cessation and nicotine de-addiction market is projected to grow by USD 16.6 billion from 2020 to 2024, with a compound annual growth rate (CAGR) of 13%. Key growth drivers include an increasing number of people attempting to quit smoking and product innovations. The market is segmented by product types such as e-cigarettes, NRT, and drug therapy, and geographically across APAC, Europe, MEA, North America, and South America. Prominent vendors include Johnson & Johnson Services Inc. (JNJ), along with other major players like British American Tobacco Plc and GlaxoSmithKline Plc. The report provides a comprehensive analysis of market trends, growth drivers, challenges, and a detailed vendor landscape. (Sentiment: positive)']}
+2025-08-06 13:23:40.951 | INFO | ENV-Current filing_k: {'JNJ': None}
+2025-08-06 13:23:40.951 | INFO | ENV-Current filing_q: {'JNJ': None}
+2025-08-06 13:23:40.951 | INFO | ENV-Current momentum: {'JNJ': None}
+2025-08-06 13:23:40.951 | INFO | ENV-Current symbol: ['JNJ']
+2025-08-06 13:23:40.952 | INFO | 📅 处理第1/2天: 2020-03-16
+2025-08-06 13:23:40.952 | INFO | 🧠 分析 JNJ - 2020-03-16
+2025-08-06 13:23:40.952 | INFO | AGENT-Step, date: 2020-03-16, run mode: RunMode.TEST, task type: TaskType.SingleAsset
+2025-08-06 13:23:40.952 | INFO | AGENT-Handling new information
+2025-08-06 13:23:40.952 | TRACE | AGENT-Handling news information
+2025-08-06 13:23:40.952 | TRACE | AGENT-Handling news for symbol: JNJ
+2025-08-06 13:23:40.952 | TRACE | MEM-Adding memories: memory_records=[MemorySingle(id=2, symbol='JNJ', date=datetime.date(2020, 3, 16), text="Convert Group, a Greek technology firm, has developed a solution to address the availability and price fluctuations of COVID-19 sensitive products in online pharmacies and groceries, which has been successfully implemented in Italy, Spain, and Greece. The company is now offering this solution globally under an Enterprise Software-as-a-Service model, enabling manufacturers to gain visibility on their digital shelf presence. This technology is particularly relevant for major Consumer Healthcare and FMCG firms, including Johnson & Johnson (JNJ), which is one of the partners. The platform's rapid setup, driven by AI and machine learning, allows for quick adaptation to market demands, which have surged significantly for COVID-19 related products. This development could enhance JNJ's ability to manage product availability and pricing, potentially leading to improved market performance during the pandemic. (Sentiment: positive)"), MemorySingle(id=3, symbol='JNJ', date=datetime.date(2020, 3, 16), text="The new research report by Safe Kids Worldwide, supported by Johnson & Johnson Consumer Inc., reveals that over 47,000 children under age 6 are seen in emergency rooms annually for medicine poisoning, equating to five children every hour. The report highlights common misconceptions about medicine safety and provides actionable steps for parents to prevent such incidents, emphasizing the importance of storing medicine out of children's reach and using child-resistant packaging. This underscores the critical role of Johnson & Johnson's consumer health products in addressing child safety, potentially enhancing the company's brand reputation and consumer trust. The findings may drive increased demand for child-resistant packaging and safety-focused products, presenting a growth opportunity for Johnson & Johnson. Investors should consider the positive impact of these safety initiatives on J&J's market position and long-term profitability. (Sentiment: positive)"), MemorySingle(id=4, symbol='JNJ', date=datetime.date(2020, 3, 16), text="Centinel Spine, LLC has appointed Steven F. Murray as CEO, effective March 16, 2020, succeeding John J. Viscogliosi. Murray, an industry veteran with over 25 years of experience in orthopedics and 20 years as an executive, was most recently President of Advanced Sterilization Products at Johnson & Johnson. Under Viscogliosi's leadership, Centinel Spine achieved record revenue in 2019 and established significant partnerships, including with Tiger Woods, to enhance public education on spinal disease. The company, known for its pioneering technology in anterior column reconstruction, recently acquired the prodisc Total Disc Replacement Technology Platform, solidifying its position as a leader in both cervical and lumbar motion-preserving and fusion solutions. This leadership change and strategic acquisitions indicate potential growth and innovation, making Centinel Spine a company to watch in the spine industry. (Sentiment: positive)"), MemorySingle(id=5, symbol='JNJ', date=datetime.date(2020, 3, 16), text='The global smoking cessation and nicotine de-addiction market is projected to grow by USD 16.6 billion from 2020 to 2024, with a compound annual growth rate (CAGR) of 13%. Key growth drivers include an increasing number of people attempting to quit smoking and product innovations. The market is segmented by product types such as e-cigarettes, NRT, and drug therapy, and geographically across APAC, Europe, MEA, North America, and South America. Prominent vendors include Johnson & Johnson Services Inc. (JNJ), along with other major players like British American Tobacco Plc and GlaxoSmithKline Plc. The report provides a comprehensive analysis of market trends, growth drivers, challenges, and a detailed vendor landscape. (Sentiment: positive)')]
+2025-08-06 13:23:40.965 | TRACE | EMB-Calling OpenAIEmbedding with model: Qwen/Qwen3-Embedding-4B, endpoint: https://api.siliconflow.cn/v1//embeddings
+2025-08-06 13:23:41.631 | TRACE | EMB-OpenAIEmbedding success response
+2025-08-06 13:23:41.632 | TRACE | MEM-Adding memory: id: 2, symbol: JNJ, date: 2020-03-16, delta: 0, importance: 50.0, recency: 1.0, access_counter: 0, layer: short
+2025-08-06 13:23:41.633 | TRACE | MEM-Adding memory: id: 3, symbol: JNJ, date: 2020-03-16, delta: 0, importance: 50.0, recency: 1.0, access_counter: 0, layer: short
+2025-08-06 13:23:41.633 | TRACE | MEM-Adding memory: id: 4, symbol: JNJ, date: 2020-03-16, delta: 0, importance: 50.0, recency: 1.0, access_counter: 0, layer: short
+2025-08-06 13:23:41.633 | TRACE | MEM-Adding memory: id: 5, symbol: JNJ, date: 2020-03-16, delta: 0, importance: 50.0, recency: 1.0, access_counter: 0, layer: short
+2025-08-06 13:23:41.646 | TRACE | MEM-Adding memories finished
+2025-08-06 13:23:41.647 | INFO | AGENT-Querying memories
+2025-08-06 13:23:41.675 | TRACE | EMB-Calling OpenAIEmbedding with model: Qwen/Qwen3-Embedding-4B, endpoint: https://api.siliconflow.cn/v1//embeddings
+2025-08-06 13:23:42.132 | TRACE | EMB-OpenAIEmbedding success response
+2025-08-06 13:23:42.162 | TRACE | EMB-Calling OpenAIEmbedding with model: Qwen/Qwen3-Embedding-4B, endpoint: https://api.siliconflow.cn/v1//embeddings
+2025-08-06 13:23:42.687 | TRACE | EMB-OpenAIEmbedding success response
+2025-08-06 13:23:42.720 | TRACE | EMB-Calling OpenAIEmbedding with model: Qwen/Qwen3-Embedding-4B, endpoint: https://api.siliconflow.cn/v1//embeddings
+2025-08-06 13:23:43.141 | TRACE | EMB-OpenAIEmbedding success response
+2025-08-06 13:23:43.184 | TRACE | EMB-Calling OpenAIEmbedding with model: Qwen/Qwen3-Embedding-4B, endpoint: https://api.siliconflow.cn/v1//embeddings
+2025-08-06 13:23:43.613 | TRACE | EMB-OpenAIEmbedding success response
+2025-08-06 13:23:43.627 | INFO | ##################################################
+2025-08-06 13:23:43.627 | INFO | AGENT-Queried memories for symbol: JNJ
+2025-08-06 13:23:43.627 | INFO | AGENT-Short Memory: 2, Convert Group, a Greek technology firm, has developed a solution to address the availability and price fluctuations of COVID-19 sensitive products in online pharmacies and groceries, which has been successfully implemented in Italy, Spain, and Greece. The company is now offering this solution globally under an Enterprise Software-as-a-Service model, enabling manufacturers to gain visibility on their digital shelf presence. This technology is particularly relevant for major Consumer Healthcare and FMCG firms, including Johnson & Johnson (JNJ), which is one of the partners. The platform's rapid setup, driven by AI and machine learning, allows for quick adaptation to market demands, which have surged significantly for COVID-19 related products. This development could enhance JNJ's ability to manage product availability and pricing, potentially leading to improved market performance during the pandemic. (Sentiment: positive)
+2025-08-06 13:23:43.627 | INFO | @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+2025-08-06 13:23:43.627 | INFO | AGENT-Short Memory: 3, The new research report by Safe Kids Worldwide, supported by Johnson & Johnson Consumer Inc., reveals that over 47,000 children under age 6 are seen in emergency rooms annually for medicine poisoning, equating to five children every hour. The report highlights common misconceptions about medicine safety and provides actionable steps for parents to prevent such incidents, emphasizing the importance of storing medicine out of children's reach and using child-resistant packaging. This underscores the critical role of Johnson & Johnson's consumer health products in addressing child safety, potentially enhancing the company's brand reputation and consumer trust. The findings may drive increased demand for child-resistant packaging and safety-focused products, presenting a growth opportunity for Johnson & Johnson. Investors should consider the positive impact of these safety initiatives on J&J's market position and long-term profitability. (Sentiment: positive)
+2025-08-06 13:23:43.627 | INFO | @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+2025-08-06 13:23:43.627 | INFO | AGENT-Short Memory: 4, Centinel Spine, LLC has appointed Steven F. Murray as CEO, effective March 16, 2020, succeeding John J. Viscogliosi. Murray, an industry veteran with over 25 years of experience in orthopedics and 20 years as an executive, was most recently President of Advanced Sterilization Products at Johnson & Johnson. Under Viscogliosi's leadership, Centinel Spine achieved record revenue in 2019 and established significant partnerships, including with Tiger Woods, to enhance public education on spinal disease. The company, known for its pioneering technology in anterior column reconstruction, recently acquired the prodisc Total Disc Replacement Technology Platform, solidifying its position as a leader in both cervical and lumbar motion-preserving and fusion solutions. This leadership change and strategic acquisitions indicate potential growth and innovation, making Centinel Spine a company to watch in the spine industry. (Sentiment: positive)
+2025-08-06 13:23:43.627 | INFO | @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+2025-08-06 13:23:43.628 | INFO | AGENT-Short Memory: 5, The global smoking cessation and nicotine de-addiction market is projected to grow by USD 16.6 billion from 2020 to 2024, with a compound annual growth rate (CAGR) of 13%. Key growth drivers include an increasing number of people attempting to quit smoking and product innovations. The market is segmented by product types such as e-cigarettes, NRT, and drug therapy, and geographically across APAC, Europe, MEA, North America, and South America. Prominent vendors include Johnson & Johnson Services Inc. (JNJ), along with other major players like British American Tobacco Plc and GlaxoSmithKline Plc. The report provides a comprehensive analysis of market trends, growth drivers, challenges, and a detailed vendor landscape. (Sentiment: positive)
+2025-08-06 13:23:43.628 | INFO | @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+2025-08-06 13:23:43.628 | INFO | AGENT-Reflection Memory: 1, Negative market sentiment leading to selling pressures caused the price decrease for JNJ on 2020-03-12.
+2025-08-06 13:23:43.628 | INFO | @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+2025-08-06 13:23:43.628 | INFO | AGENT-Single asset task
+2025-08-06 13:23:43.628 | TRACE | AGENT-Constructed prompt
+2025-08-06 13:23:43.641 | TRACE | AGENT-Constructed schema
+2025-08-06 13:23:43.955 | INFO | LLM API Request sent
+2025-08-06 13:24:21.871 | INFO | LLM API Request successful
+2025-08-06 13:24:23.272 | INFO | ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-08-06 13:24:23.274 | TRACE | MEM-Adding memories: memory_records=[MemorySingle(id=6, symbol='JNJ', date=datetime.date(2020, 3, 16), text="The short-term information (IDs 2,3,4,5) indicates positive sentiment regarding JNJ's partnerships in technology solutions for product availability, safety initiatives enhancing brand reputation, and growth opportunities in the smoking cessation market. Despite a prior price decrease due to negative sentiment (reflection-term ID 1), the current positive financial sentiment and relevance of new developments suggest a 'buy' decision.")]
+2025-08-06 13:24:23.306 | TRACE | EMB-Calling OpenAIEmbedding with model: Qwen/Qwen3-Embedding-4B, endpoint: https://api.siliconflow.cn/v1//embeddings
+2025-08-06 13:24:23.622 | TRACE | EMB-OpenAIEmbedding success response
+2025-08-06 13:24:23.640 | TRACE | MEM-Adding memory: id: 6, symbol: JNJ, date: 2020-03-16, delta: 0, importance: 80.0, recency: 1.0, access_counter: 0, layer: reflection
+2025-08-06 13:24:23.651 | TRACE | MEM-Adding memories finished
+2025-08-06 13:24:23.651 | INFO | AGENT-action: TradeAction.BUY
+2025-08-06 13:24:23.651 | INFO | AGENT-summary reason: The short-term information (IDs 2,3,4,5) indicates positive sentiment regarding JNJ's partnerships in technology solutions for product availability, safety initiatives enhancing brand reputation, and growth opportunities in the smoking cessation market. Despite a prior price decrease due to negative sentiment (reflection-term ID 1), the current positive financial sentiment and relevance of new developments suggest a 'buy' decision.
+2025-08-06 13:24:23.651 | TRACE | PORTFOLIO: position transition: AssetPosition.SHORT -> AssetPosition.LONG by action: TradeAction.BUY
+2025-08-06 13:24:23.651 | TRACE | PORTFOLIO: position deque: deque([-1, 1], maxlen=3)
+2025-08-06 13:24:23.651 | TRACE | PORTFOLIO: price deque: deque([111.58531188964844, 113.11568450927734], maxlen=4)
+2025-08-06 13:24:23.651 | TRACE | PORTFOLIO: evidence deque: deque([[1], [6]], maxlen=3)
+2025-08-06 13:24:23.651 | INFO | AGENT-feedback: {'access_counter_records': []}
+2025-08-06 13:24:23.692 | TRACE | MEM-Flowing memories
+2025-08-06 13:24:23.694 | TRACE | MEM-Short up memory
+2025-08-06 13:24:23.694 | TRACE | MEM-Mid down memory
+2025-08-06 13:24:23.695 | TRACE | MEM-Mid up memory
+2025-08-06 13:24:23.696 | TRACE | MEM-Long down memory
+2025-08-06 13:24:23.698 | TRACE | MEM-Short up memory
+2025-08-06 13:24:23.699 | TRACE | MEM-Mid down memory
+2025-08-06 13:24:23.700 | TRACE | MEM-Mid up memory
+2025-08-06 13:24:23.701 | TRACE | MEM-Long down memory
+2025-08-06 13:24:23.702 | ERROR | ❌ 运行失败: 'NoneType' object has no attribute 'action'

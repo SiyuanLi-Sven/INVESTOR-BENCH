@@ -1,9 +1,8 @@
 from typing import List, Union
 
-try:
-    from guardrails.hub import ValidChoices
-except ImportError:
-    from .mock_validators import ValidChoices
+# 为了避免pydantic序列化问题，完全禁用ValidChoices
+USE_VALIDATORS = False
+ValidChoices = None
 from pydantic import BaseModel, Field
 
 from ...utils import RunMode
@@ -24,25 +23,41 @@ test_trade_reason_summary = "Given the information of text and the summary of th
 
 
 def _train_memory_factory(memory_layer: str, id_list: List[int]):
-    class Memory(BaseModel):
-        memory_index: int = Field(
-            ...,
-            description=warmup_memory_id_extract_prompt.format(
-                memory_layer=memory_layer
-            ),
-            validators=[ValidChoices(id_list, on_fail="reask")],  # type: ignore
-        )
+    if USE_VALIDATORS and ValidChoices:
+        class Memory(BaseModel):
+            memory_index: int = Field(
+                ...,
+                description=warmup_memory_id_extract_prompt.format(
+                    memory_layer=memory_layer
+                ),
+                validators=[ValidChoices(id_list, on_fail="reask")],  # type: ignore
+            )
+    else:
+        class Memory(BaseModel):
+            memory_index: int = Field(
+                ...,
+                description=warmup_memory_id_extract_prompt.format(
+                    memory_layer=memory_layer
+                ),
+            )
 
     return Memory
 
 
 def _test_memory_factory(memory_layer: str, id_list: List[int]):
-    class Memory(BaseModel):
-        memory_index: int = Field(
-            ...,
-            description=test_memory_id_extract_prompt.format(memory_layer=memory_layer),
-            validators=[ValidChoices(id_list)],  # type: ignore
-        )
+    if USE_VALIDATORS and ValidChoices:
+        class Memory(BaseModel):
+            memory_index: int = Field(
+                ...,
+                description=test_memory_id_extract_prompt.format(memory_layer=memory_layer),
+                validators=[ValidChoices(id_list)],  # type: ignore
+            )
+    else:
+        class Memory(BaseModel):
+            memory_index: int = Field(
+                ...,
+                description=test_memory_id_extract_prompt.format(memory_layer=memory_layer),
+            )
 
     return Memory
 
@@ -106,16 +121,28 @@ def _test_reflection_factory(
     if reflection_id_list:
         ReflectionMem = _test_memory_factory("reflection-level", reflection_id_list)  # type: ignore
 
-    class InvestInfo(BaseModel):
-        investment_decision: str = Field(
-            ...,
-            description=test_invest_action_choice,
-            validators=[ValidChoices(choices=["buy", "sell", "hold"])],  # type: ignore
-        )
-        summary_reason: str = Field(
-            ...,
-            description=test_trade_reason_summary,
-        )
+    # 动态创建InvestInfo类，避免validators序列化问题
+    if USE_VALIDATORS and ValidChoices:
+        class InvestInfo(BaseModel):
+            investment_decision: str = Field(
+                ...,
+                description=test_invest_action_choice,
+                validators=[ValidChoices(choices=["buy", "sell", "hold"])],  # type: ignore
+            )
+            summary_reason: str = Field(
+                ...,
+                description=test_trade_reason_summary,
+            )
+    else:
+        class InvestInfo(BaseModel):
+            investment_decision: str = Field(
+                ...,
+                description=test_invest_action_choice,
+            )
+            summary_reason: str = Field(
+                ...,
+                description=test_trade_reason_summary,
+            )
         if short_id_list:
             short_memory_ids: List[ShortMem] = Field(  # type: ignore
                 ...,
