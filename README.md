@@ -1,5 +1,7 @@
 # INVESTOR-BENCH 🚀
 
+此仓库绝大部分代码来自fork的仓库https://github.com/felis33/INVESTOR-BENCH. 此仓库仅做个人学习使用. 
+
 **大语言模型驱动的投资决策评估框架**
 
 INVESTOR-BENCH是一个专业的评估平台，用于测试大语言模型在金融投资场景中的决策能力。项目实现了FinMemAgent（金融记忆智能体），具备多层级记忆系统和专业的投资策略评估功能。
