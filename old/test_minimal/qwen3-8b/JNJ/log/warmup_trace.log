@@ -1,0 +1,101 @@
+2025-08-07T00:03:24.619178+0800 INFO SYS-Warmup function started
+2025-08-07T00:03:24.619239+0800 INFO CONFIG-Config path: configs/test_minimal.json
+2025-08-07T00:03:24.619288+0800 INFO CONFIG-Config: {'chat_config': {'chat_model': 'Qwen/Qwen3-8B', 'lora': False, 'chat_model_type': 'instruction', 'chat_model_inference_engine': 'openai_compatible', 'chat_system_message': 'You are a helpful assistant.', 'chat_parameters': {'temperature': 0.6}, 'chat_max_new_token': 500, 'chat_request_timeout': 60}, 'emb_config': {'emb_model_name': 'Qwen/Qwen3-Embedding-4B', 'emb_size': 4096, 'embedding_timeout': 60}, 'env_config': {'trading_symbols': ['JNJ'], 'warmup_start_time': '2020-03-12', 'warmup_end_time': '2020-03-20', 'test_start_time': '2020-03-23', 'test_end_time': '2020-03-30', 'momentum_window_size': 3, 'env_data_path': {'JNJ': 'data/jnj.json'}}, 'portfolio_config': {'trading_symbols': ['JNJ'], 'type': 'single-asset', 'cash': 100000, 'look_back_window_size': 3}, 'agent_config': {'agent_name': 'test_agent', 'trading_symbols': ['JNJ'], 'character_string': {'JNJ': 'You are an investment expert of Johnson & Johnson (JNJ). You have knowledge about pharmaceuticals, medical devices, and consumer health sectors.'}, 'top_k': 5, 'memory_db_config': {'memory_db_endpoint': 'http://localhost:6333', 'memory_importance_upper_bound': 100.0, 'memory_importance_score_update_step': 18.0, 'trading_symbols': ['JNJ'], 'short': {'db_name': 'short', 'importance_init_val': 50.0, 'decay_recency_factor': 3.0, 'decay_importance_factor': 0.92, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_upper_threshold': 55.0}, 'mid': {'db_name': 'mid', 'importance_init_val': 60.0, 'decay_recency_factor': 90.0, 'decay_importance_factor': 0.96, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_lower_threshold': 55.0, 'jump_upper_threshold': 85.0}, 'long': {'db_name': 'long', 'importance_init_val': 90.0, 'decay_recency_factor': 365.0, 'decay_importance_factor': 0.96, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_lower_threshold': 85.0}, 'reflection': {'db_name': 'reflection', 'importance_init_val': 80.0, 'decay_recency_factor': 365.0, 'decay_importance_factor': 0.98, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'similarity_threshold': 0.95}}}, 'meta_config': {'run_name': 'test_minimal', 'momentum_window_size': 3, 'warmup_checkpoint_save_path': 'results/test_minimal/qwen3-8b/JNJ/warmup_checkpoint', 'warmup_output_save_path': 'results/test_minimal/qwen3-8b/JNJ/warmup_output', 'test_checkpoint_save_path': 'results/test_minimal/qwen3-8b/JNJ/test_checkpoint', 'test_output_save_path': 'results/test_minimal/qwen3-8b/JNJ/test_output', 'result_save_path': 'results/test_minimal/qwen3-8b/JNJ/final_result', 'log_save_path': 'results/test_minimal/qwen3-8b/JNJ/log'}}
+2025-08-07T00:03:24.619337+0800 INFO ENV-Creating MarketEnvironment with params: env_data_pkl {'JNJ': 'data/jnj.json'}, start_date 2020-03-12, end_date 2020-03-20, symbol ['JNJ']
+2025-08-07T00:03:24.620773+0800 INFO ENV-Final date series (intersection): [datetime.date(2020, 3, 12), datetime.date(2020, 3, 13), datetime.date(2020, 3, 16), datetime.date(2020, 3, 17), datetime.date(2020, 3, 18), datetime.date(2020, 3, 19), datetime.date(2020, 3, 20)]
+2025-08-07T00:03:24.620832+0800 INFO ENV-Simulation-Length: 7
+2025-08-07T00:03:24.620871+0800 INFO SYS-Initializing FinMemAgent
+2025-08-07T00:03:24.620897+0800 TRACE CONFIG-agent config: {agent_config}
+2025-08-07T00:03:24.620909+0800 TRACE CONFIG-emb config: {emb_config}
+2025-08-07T00:03:24.620921+0800 TRACE CONFIG-chat config: {chat_config}
+2025-08-07T00:03:24.620932+0800 TRACE CONFIG-portfolio config: {portfolio_config}
+2025-08-07T00:03:24.620944+0800 INFO SYS-Initializing MemoryDB
+2025-08-07T00:03:24.645060+0800 TRACE 统一Embedding客户端初始化: Qwen/Qwen3-Embedding-4B
+2025-08-07T00:03:24.645126+0800 TRACE Provider: siliconflow
+2025-08-07T00:03:24.645146+0800 TRACE API Base: https://api.siliconflow.cn/v1
+2025-08-07T00:03:24.656747+0800 TRACE Connect to Qdrant established
+2025-08-07T00:03:24.667034+0800 TRACE SYS-Collection test_agent already exists, deleting
+2025-08-07T00:03:24.686472+0800 TRACE SYS-Create collection test_agent, emb_size: 4096
+2025-08-07T00:03:24.731030+0800 TRACE SYS-Initializing IDGenerator, with init id: 0
+2025-08-07T00:03:24.731103+0800 TRACE SYS-Initializing chat model, prompt, and schema
+2025-08-07T00:03:24.731127+0800 TRACE SYS-使用统一OpenAI兼容接口
+2025-08-07T00:03:24.731148+0800 TRACE 初始化单资产OpenAI兼容生成器
+2025-08-07T00:03:24.746729+0800 TRACE OpenAI兼容客户端初始化: Qwen/Qwen3-8B
+2025-08-07T00:03:24.746830+0800 TRACE API Base: https://api.siliconflow.cn/v1
+2025-08-07T00:03:24.746856+0800 TRACE Provider: siliconflow
+2025-08-07T00:03:24.746874+0800 TRACE 单资产生成器初始化完成: Qwen/Qwen3-8B
+2025-08-07T00:03:24.746894+0800 TRACE SYS-Configuring memory settings
+2025-08-07T00:03:24.746921+0800 TRACE AGENT-Configuring short memory settings: {'db_name': 'short', 'importance_init_val': 50.0, 'decay_recency_factor': 3.0, 'decay_importance_factor': 0.92, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_upper_threshold': 55.0}
+2025-08-07T00:03:24.746941+0800 TRACE AGENT-Configuring mid memory settings: {'db_name': 'mid', 'importance_init_val': 60.0, 'decay_recency_factor': 90.0, 'decay_importance_factor': 0.96, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_lower_threshold': 55.0, 'jump_upper_threshold': 85.0}
+2025-08-07T00:03:24.746956+0800 TRACE AGENT-Configuring long memory settings: {'db_name': 'long', 'importance_init_val': 90.0, 'decay_recency_factor': 365.0, 'decay_importance_factor': 0.96, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_lower_threshold': 85.0}
+2025-08-07T00:03:24.746971+0800 TRACE AGENT-Configuring reflection memory settings: {'db_name': 'reflection', 'importance_init_val': 80.0, 'decay_recency_factor': 365.0, 'decay_importance_factor': 0.98, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'similarity_threshold': 0.95}
+2025-08-07T00:03:24.746987+0800 TRACE AGENT-Constant access counter update function, step: 18.0
+2025-08-07T00:03:24.747002+0800 TRACE AGENT-Linear compound score, upper bound: 100.0
+2025-08-07T00:03:24.747017+0800 TRACE AGENT-Short memory importance init val: 50.0
+2025-08-07T00:03:24.747030+0800 TRACE AGENT-Short memory recency constant init from 1
+2025-08-07T00:03:24.747043+0800 TRACE AGENT-Short memory importance decay, with factor: 0.92
+2025-08-07T00:03:24.747056+0800 TRACE AGENT-Short memory recency decay, with factor: 3.0
+2025-08-07T00:03:24.747068+0800 TRACE AGENT-Mid memory importance init val: 60.0
+2025-08-07T00:03:24.747080+0800 TRACE AGENT-Mid memory recency constant init from 1
+2025-08-07T00:03:24.747093+0800 TRACE AGENT-Mid memory importance decay, with factor: 0.96
+2025-08-07T00:03:24.747105+0800 TRACE AGENT-Mid memory recency decay, with factor: 90.0
+2025-08-07T00:03:24.747117+0800 TRACE AGENT-Long memory importance init val: 90.0
+2025-08-07T00:03:24.747129+0800 TRACE AGENT-Long memory recency constant init from 1
+2025-08-07T00:03:24.747141+0800 TRACE AGENT-Long memory importance decay, with factor: 0.96
+2025-08-07T00:03:24.747154+0800 TRACE AGENT-Long memory recency decay, with factor: 365.0
+2025-08-07T00:03:24.747167+0800 TRACE AGENT-Reflection memory importance init val: 80.0
+2025-08-07T00:03:24.747179+0800 TRACE AGENT-Reflection memory recency constant init from 1
+2025-08-07T00:03:24.747191+0800 TRACE AGENT-Reflection memory importance decay, with factor: 0.98
+2025-08-07T00:03:24.747203+0800 TRACE AGENT-Reflection memory recency decay, with factor: 365.0
+2025-08-07T00:03:24.747220+0800 TRACE AGENT-Clean up threshold dict: {'short': {'importance': 5.0, 'recency': 0.05}, 'mid': {'importance': 5.0, 'recency': 0.05}, 'long': {'importance': 5.0, 'recency': 0.05}, 'reflection': {'importance': 5.0, 'recency': 0.05}}
+2025-08-07T00:03:24.747236+0800 TRACE AGENT-Jump threshold dict: {'short': {'upper': 55.0}, 'mid': {'upper': 85.0, 'lower': 55.0}, 'long': {'lower': 85.0}}
+2025-08-07T00:03:24.747286+0800 TRACE AGENT-Constructed queries: {'query_records': [{'query_text': 'You are an investment expert of Johnson & Johnson (JNJ). You have knowledge about pharmaceuticals, medical devices, and consumer health sectors.', 'k': 5, 'symbol': 'JNJ'}]}
+2025-08-07T00:03:24.747305+0800 INFO SYS-Portfolio type: single-asset
+2025-08-07T00:03:24.747347+0800 TRACE PORTFOLIO: trading symbol: JNJ
+2025-08-07T00:03:24.747359+0800 TRACE PORTFOLIO: look back window size: 3
+2025-08-07T00:03:24.747378+0800 TRACE PORTFOLIO: initial position: AssetPosition.NEUTRAL
+2025-08-07T00:03:24.747930+0800 INFO **************************************************
+2025-08-07T00:03:24.748000+0800 INFO ENV- current date: 2020-03-12, future date: 2020-03-13
+2025-08-07T00:03:24.748070+0800 INFO ENV-Current price: {'JNJ': 111.58531188964844}, future price diff: {'JNJ': -0.07080763942400062}
+2025-08-07T00:03:24.748104+0800 INFO ENV-Current news: {'JNJ': None}
+2025-08-07T00:03:24.748130+0800 INFO ENV-Current filing_k: {'JNJ': None}
+2025-08-07T00:03:24.748155+0800 INFO ENV-Current filing_q: {'JNJ': None}
+2025-08-07T00:03:24.748187+0800 INFO ENV-Current momentum: {'JNJ': None}
+2025-08-07T00:03:24.748209+0800 INFO ENV-Current symbol: ['JNJ']
+2025-08-07T00:03:24.748243+0800 INFO ENV-new info from env
+2025-08-07T00:03:24.748269+0800 INFO ENV-date: 2020-03-12
+2025-08-07T00:03:24.748292+0800 INFO ENV-price: {'JNJ': 111.58531188964844}
+2025-08-07T00:03:24.748314+0800 INFO ENV-momentum: {'JNJ': None}
+2025-08-07T00:03:24.748335+0800 INFO ENV-symbol: ['JNJ']
+2025-08-07T00:03:24.748357+0800 INFO ==================================================
+2025-08-07T00:03:24.748386+0800 INFO AGENT-Step, date: 2020-03-12, run mode: RunMode.WARMUP, task type: TaskType.SingleAsset
+2025-08-07T00:03:24.748407+0800 INFO AGENT-Handling new information
+2025-08-07T00:03:24.748429+0800 TRACE AGENT-Handling news information
+2025-08-07T00:03:24.748440+0800 INFO AGENT-Querying memories
+2025-08-07T00:03:24.748469+0800 TRACE 调用Embedding API: Qwen/Qwen3-Embedding-4B, 文本数量: 1
+2025-08-07T00:03:25.065491+0800 TRACE Embedding API调用成功: Qwen/Qwen3-Embedding-4B
+2025-08-07T00:03:25.077262+0800 TRACE 调用Embedding API: Qwen/Qwen3-Embedding-4B, 文本数量: 1
+2025-08-07T00:03:25.193276+0800 TRACE Embedding API调用成功: Qwen/Qwen3-Embedding-4B
+2025-08-07T00:03:25.204848+0800 TRACE 调用Embedding API: Qwen/Qwen3-Embedding-4B, 文本数量: 1
+2025-08-07T00:03:25.311067+0800 TRACE Embedding API调用成功: Qwen/Qwen3-Embedding-4B
+2025-08-07T00:03:25.320564+0800 TRACE 调用Embedding API: Qwen/Qwen3-Embedding-4B, 文本数量: 1
+2025-08-07T00:03:25.443399+0800 TRACE Embedding API调用成功: Qwen/Qwen3-Embedding-4B
+2025-08-07T00:03:25.452233+0800 INFO ##################################################
+2025-08-07T00:03:25.452341+0800 INFO AGENT-Queried memories for symbol: JNJ
+2025-08-07T00:03:25.452385+0800 INFO AGENT-Single asset task
+2025-08-07T00:03:25.452438+0800 TRACE AGENT-Constructed prompt
+2025-08-07T00:03:25.452923+0800 TRACE AGENT-Constructed schema
+2025-08-07T00:03:25.452965+0800 TRACE Messages类型: <class 'list'>
+2025-08-07T00:03:25.452983+0800 TRACE 第一个message类型: <class 'dict'>
+2025-08-07T00:03:25.452999+0800 TRACE Message keys: ['role', 'content']
+2025-08-07T00:03:25.453032+0800 TRACE 发送API请求参数: ['model', 'messages', 'max_tokens', 'temperature']
+2025-08-07T00:03:25.453058+0800 TRACE 请求参数详情: {'model': 'Qwen/Qwen3-8B', 'messages': [{'role': 'system', 'content': 'You are a helpful assistant.'}, {'role': 'user', 'content': 'The current date is 2020-03-12. Here are the observed financial market facts: for JNJ, the price difference between the next trading day and the current trading day is: -0.07080763942400062\n\nThe short-term information:\n-1. No short-term information.\n-1. No short-term information.In investment decision-making, analyzing financial sentiment is pivotal, offering insights into market perceptions and forecasting potential market trends. Sentiment analysis divides market opinions into three categories: positive, negative, and neutral. A positive sentiment signals optimism about future prospects, often leading to increased buying activity, while negative sentiment reflects pessimism,\n                        likely causing selling pressures. Neutral sentiment indicates either uncertainty or a balanced view, suggesting that investors are neither overly bullish nor bearish. Leveraging these sentiment indicators enables investors and analysts to fine-tune their strategies to better match the prevailing market atmosphere.\n                        Additionally, news about competitors can significantly impact a company\'s stock price. For example, if a competitor unveils a groundbreaking product, it may lead to a decline in the stock prices of other companies within the same industry as investors anticipate potential market share losses.\n                        \n\nThe mid-term information:\n-1. No mid-term information.\n-1. No mid-term information.\n\nThe long-term information:\n-1. No long-term information.\n-1. No long-term information.\n\nThe reflection-term information:\n-1. No reflection-term information.\n-1. No reflection-term information.\n\n Given the following information, can you explain to me why the financial market fluctuation from current day to the next day behaves like this? Summarize the reason of the decision。\n    Your should provide a summary information and the id of the information to support your summary.\n\n    \n\n    \n\n\nPlease respond with valid JSON format. Use "summary_reason" as the field name for your explanation, and "investment_decision" for your decision (buy/sell/hold).'}], 'max_tokens': 500, 'temperature': 0.6}
+2025-08-07T00:03:56.810566+0800 TRACE JSON解析成功: Qwen/Qwen3-8B
+2025-08-07T00:03:56.812840+0800 TRACE 单资产结构化响应生成成功
+2025-08-07T00:03:56.813018+0800 INFO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2025-08-07T00:03:56.813790+0800 TRACE MEM-Adding memories: memory_records=[MemorySingle(id=1, symbol='JNJ', date=datetime.date(2020, 3, 12), text='The provided data does not include specific information about news, sentiment, or market events that could explain the observed price fluctuation for JNJ. Without details on short-term, mid-term, or long-term factors, the negative change may be attributed to broader market conditions, unmentioned company-specific events, or temporary liquidity issues. However, the absence of clear drivers makes it difficult to determine the exact cause.')]
+2025-08-07T00:03:56.813920+0800 TRACE 调用Embedding API: Qwen/Qwen3-Embedding-4B, 文本数量: 1
+2025-08-07T00:03:57.079235+0800 TRACE Embedding API调用成功: Qwen/Qwen3-Embedding-4B
+2025-08-07T00:05:21.089974+0800 INFO SYS-Warmup checkpoint function started
+2025-08-07T00:05:21.090275+0800 INFO CONFIG-Config path: configs/test_minimal.json
+2025-08-07T00:05:21.090330+0800 INFO CONFIG-Config: {'chat_config': {'chat_model': 'Qwen/Qwen3-8B', 'lora': False, 'chat_model_type': 'instruction', 'chat_model_inference_engine': 'openai_compatible', 'chat_system_message': 'You are a helpful assistant.', 'chat_parameters': {'temperature': 0.6}, 'chat_max_new_token': 500, 'chat_request_timeout': 60}, 'emb_config': {'emb_model_name': 'Qwen/Qwen3-Embedding-4B', 'emb_size': 4096, 'embedding_timeout': 60}, 'env_config': {'trading_symbols': ['JNJ'], 'warmup_start_time': '2020-03-12', 'warmup_end_time': '2020-03-20', 'test_start_time': '2020-03-23', 'test_end_time': '2020-03-30', 'momentum_window_size': 3, 'env_data_path': {'JNJ': 'data/jnj.json'}}, 'portfolio_config': {'trading_symbols': ['JNJ'], 'type': 'single-asset', 'cash': 100000, 'look_back_window_size': 3}, 'agent_config': {'agent_name': 'test_agent', 'trading_symbols': ['JNJ'], 'character_string': {'JNJ': 'You are an investment expert of Johnson & Johnson (JNJ). You have knowledge about pharmaceuticals, medical devices, and consumer health sectors.'}, 'top_k': 5, 'memory_db_config': {'memory_db_endpoint': 'http://localhost:6333', 'memory_importance_upper_bound': 100.0, 'memory_importance_score_update_step': 18.0, 'trading_symbols': ['JNJ'], 'short': {'db_name': 'short', 'importance_init_val': 50.0, 'decay_recency_factor': 3.0, 'decay_importance_factor': 0.92, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_upper_threshold': 55.0}, 'mid': {'db_name': 'mid', 'importance_init_val': 60.0, 'decay_recency_factor': 90.0, 'decay_importance_factor': 0.96, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_lower_threshold': 55.0, 'jump_upper_threshold': 85.0}, 'long': {'db_name': 'long', 'importance_init_val': 90.0, 'decay_recency_factor': 365.0, 'decay_importance_factor': 0.96, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'jump_lower_threshold': 85.0}, 'reflection': {'db_name': 'reflection', 'importance_init_val': 80.0, 'decay_recency_factor': 365.0, 'decay_importance_factor': 0.98, 'clean_up_recency_threshold': 0.05, 'clean_up_importance_threshold': 5.0, 'similarity_threshold': 0.95}}}, 'meta_config': {'run_name': 'test_minimal', 'momentum_window_size': 3, 'warmup_checkpoint_save_path': 'results/test_minimal/qwen3-8b/JNJ/warmup_checkpoint', 'warmup_output_save_path': 'results/test_minimal/qwen3-8b/JNJ/warmup_output', 'test_checkpoint_save_path': 'results/test_minimal/qwen3-8b/JNJ/test_checkpoint', 'test_output_save_path': 'results/test_minimal/qwen3-8b/JNJ/test_output', 'result_save_path': 'results/test_minimal/qwen3-8b/JNJ/final_result', 'log_save_path': 'results/test_minimal/qwen3-8b/JNJ/log'}}

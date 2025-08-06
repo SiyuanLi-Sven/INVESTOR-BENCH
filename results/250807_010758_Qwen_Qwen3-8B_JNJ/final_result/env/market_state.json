@@ -1,0 +1,20 @@
+{
+  "market_summary": {
+    "symbol": "JNJ",
+    "period": "2020-03-12 to 2020-03-17",
+    "price_range": {
+      "min": 111.51,
+      "max": 115.2,
+      "start": 111.58,
+      "end": 114.85
+    },
+    "volatility": 1.65,
+    "total_trading_days": 4
+  },
+  "trading_statistics": {
+    "total_volume_traded": 175,
+    "total_value_traded": 30940.25,
+    "average_trade_size": 68.75,
+    "price_improvement": 3.27
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "chat_config": {
+    "chat_model": "Qwen/Qwen3-8B",
+    "chat_model_inference_engine": "openai_compatible",
+    "chat_system_message": "You are a helpful assistant.",
+    "chat_parameters": {
+      "temperature": 0.6
+    },
+    "chat_max_new_token": 1000,
+    "chat_request_timeout": 60
+  },
+  "emb_config": {
+    "emb_model_name": "Qwen/Qwen3-Embedding-4B",
+    "embedding_timeout": 60
+  }
+}

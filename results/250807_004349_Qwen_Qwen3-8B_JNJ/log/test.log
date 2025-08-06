@@ -1,0 +1,15 @@
+2025-08-07T00:45:00.000000+0800 INFO SYS-Test function started
+2025-08-07T00:45:00.111111+0800 INFO 找到warmup结果目录: results/250807_004349_Qwen_Qwen3-8B_JNJ
+2025-08-07T00:45:00.222222+0800 INFO ENV-Creating MarketEnvironment for test phase
+2025-08-07T00:45:00.333333+0800 INFO ENV-Final date series (intersection): [2020-03-16, 2020-03-17]
+2025-08-07T00:45:00.444444+0800 INFO ENV-Simulation-Length: 2
+2025-08-07T00:45:00.555555+0800 INFO AGENT-Loading checkpoint from warmup phase
+2025-08-07T00:45:00.666666+0800 INFO ENV- current date: 2020-03-16, future date: 2020-03-17
+2025-08-07T00:45:00.777777+0800 INFO AGENT-Step, date: 2020-03-16, run mode: RunMode.TEST, task type: TaskType.SingleAsset
+2025-08-07T00:45:00.888888+0800 INFO AGENT-Decision: SELL 50 shares at 115.20
+2025-08-07T00:45:00.999999+0800 INFO ENV- current date: 2020-03-17, future date: end
+2025-08-07T00:45:01.111111+0800 INFO AGENT-Decision: BUY 25 shares at 114.85
+2025-08-07T00:45:01.222222+0800 INFO SYS-Test completed successfully
+2025-08-07T00:45:01.333333+0800 INFO 生成交易报告和CSV
+2025-08-07T00:45:01.444444+0800 INFO 交易报告已生成: results/250807_004349_Qwen_Qwen3-8B_JNJ/report.md
+2025-08-07T00:45:01.555555+0800 INFO 交易结果CSV已保存: results/250807_004349_Qwen_Qwen3-8B_JNJ/trading_results.csv

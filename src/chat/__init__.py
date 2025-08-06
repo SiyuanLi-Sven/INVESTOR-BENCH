@@ -13,6 +13,8 @@ from .endpoint import (
     MultiAssetsStructureOutputResponse,
     GPTGuardRailStructureGeneration,
     ClaudeGuardRailStructureGeneration,
+    SingleAssetOpenAICompatibleGeneration,
+    MultiAssetsOpenAICompatibleGeneration,
 )
 
 from .prompt import (
@@ -50,8 +52,28 @@ def get_chat_model(
     chat_config: Dict, task_type: TaskType
 ) -> Union[single_asset_return_type, multi_asset_return_type]:
     logger.trace("SYS-Initializing chat model, prompt, and schema")
-    if chat_config["chat_model_inference_engine"] == "vllm":
-        logger.trace("SYS-Chat model is VLLM")
+    
+    inference_engine = chat_config.get("chat_model_inference_engine", "openai_compatible")
+    
+    # 新的统一OpenAI兼容接口 (推荐使用)
+    if inference_engine == "openai_compatible" or inference_engine == "unified":
+        logger.trace("SYS-使用统一OpenAI兼容接口")
+        if task_type == TaskType.SingleAsset:
+            return (
+                GuardrailStructureGenerationSchema(),  # 使用现有的schema
+                SingleAssetOpenAICompatibleGeneration(chat_config=chat_config),
+                GuardrailPromptConstructor(),  # 使用现有的prompt构造器
+            )
+        else:
+            return (
+                MultiAssetsVLLMStructureGenerationSchema(),  # 使用现有的schema
+                MultiAssetsOpenAICompatibleGeneration(chat_config=chat_config),
+                MultiAssetsVLLMPromptConstructor(),  # 使用现有的prompt构造器
+            )
+    
+    # 保留原有的VLLM直接调用方式（向后兼容）
+    elif inference_engine == "vllm":
+        logger.trace("SYS-Chat model is VLLM (legacy mode)")
         if task_type == TaskType.SingleAsset:
             return (
                 SingleAssetVLLMStructureGenerationSchema(),
@@ -64,7 +86,10 @@ def get_chat_model(
                 MultiAssetsVLLMStructureGeneration(chat_config=chat_config),
                 MultiAssetsVLLMPromptConstructor(),
             )
-    elif chat_config["chat_model_inference_engine"] == "openai":
+    
+    # 保留原有的OpenAI Guardrails方式（向后兼容）
+    elif inference_engine == "openai":
+        logger.trace("SYS-Chat model is OpenAI (legacy guardrails mode)")
         if task_type == TaskType.SingleAsset:
             return (
                 GuardrailStructureGenerationSchema(),
@@ -72,8 +97,11 @@ def get_chat_model(
                 GuardrailPromptConstructor(),
             )
         else:
-            raise NotImplementedError("Multi-asset not implemented for OpenAI")
-    elif chat_config["chat_model_inference_engine"] == "anthropic":
+            raise NotImplementedError("Multi-asset not implemented for OpenAI legacy mode")
+    
+    # 保留原有的Anthropic方式（向后兼容）
+    elif inference_engine == "anthropic":
+        logger.trace("SYS-Chat model is Anthropic (legacy guardrails mode)")
         if task_type == TaskType.SingleAsset:
             return (
                 GuardrailStructureGenerationSchema(),
@@ -81,12 +109,13 @@ def get_chat_model(
                 GuardrailPromptConstructor(),
             )
         else:
-            raise NotImplementedError("Multi-asset not implemented for Claude")
+            raise NotImplementedError("Multi-asset not implemented for Claude legacy mode")
+    
     else:
-        logger.error(
-            f"SYS-Model {chat_config['chat_model_inference_engine']} not implemented"
-        )
+        logger.error(f"SYS-Model inference engine {inference_engine} not implemented")
+        logger.error("SYS-Supported engines: openai_compatible, unified, vllm, openai, anthropic")
         logger.error("SYS-Exiting")
         raise NotImplementedError(
-            f"Model {chat_config['chat_model_inference_engine']} not implemented"
+            f"Model inference engine {inference_engine} not implemented. "
+            f"Supported: openai_compatible, unified, vllm, openai, anthropic"
         )

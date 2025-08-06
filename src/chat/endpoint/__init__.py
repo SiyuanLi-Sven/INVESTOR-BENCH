@@ -13,3 +13,7 @@ from .guardrails import (
     GPTGuardRailStructureGeneration,
     ClaudeGuardRailStructureGeneration,
 )
+from .openai_compatible import (
+    SingleAssetOpenAICompatibleGeneration,
+    MultiAssetsOpenAICompatibleGeneration,
+)

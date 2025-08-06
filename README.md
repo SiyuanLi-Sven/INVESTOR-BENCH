@@ -1,14 +1,86 @@
-# InvestorBench
+# INVESTOR-BENCH 🚀
 
-## Usage
+**大语言模型驱动的投资决策评估框架**
 
-In this section, we provide a step-by-step guide to running the evaluation framework with the fine-tuned LLM. The evaluation framework consists of three parts:
+INVESTOR-BENCH是一个专业的评估平台，用于测试大语言模型在金融投资场景中的决策能力。项目实现了FinMemAgent（金融记忆智能体），具备多层级记忆系统和专业的投资策略评估功能。
 
-- **VLLM Server**: The server that provides the API for the fine-tuned LLM. We will use the Docker image provided by the VLLM team. We will explore how to deploy both a LLM and a base LLM with a LoRA head.
+## ✨ 核心特性
+
+- 🧠 **FinMemAgent**: 具备多层级记忆的金融智能体（短期/中期/长期/反思）
+- 📊 **专业报告**: 自动生成包含Markdown表格和可视化图表的交易报告
+- 🎯 **时间戳目录**: 结果按`YYMMDD_HHMMSS_ModelName_SYMBOL`格式组织
+- 📈 **风险分析**: 夏普比率、最大回撤、VaR等专业金融指标
+- 🔄 **完整流程**: Warmup → Test → Eval 三阶段评估
+- 📋 **Markdown表格**: 清晰的投资组合表现和交易明细展示
+- 🎨 **数据可视化**: 4种专业图表（价值变化、行为分布、价格关系、阶段对比）
+
+## 🚀 快速开始
+
+### 1. 环境准备
+
+```bash
+# 克隆项目
+git clone <repository>
+cd INVESTOR-BENCH
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 启动Qdrant向量数据库
+docker run -p 6333:6333 qdrant/qdrant
+```
+
+### 2. 运行完整评估
+
+```bash
+# ⚡ 一键运行 (推荐)
+python run.py run-all -c configs/quick_test.json      # 快速测试 (~5分钟)
+python run.py run-all -c configs/test_clean.json      # 标准测试 (~10分钟)
+python run.py run-all -c configs/extended_test.json   # 扩展测试 (~30分钟)
+
+# 📝 分步执行 (可选)
+python run.py warmup -c configs/test_clean.json
+python run.py test -c configs/test_clean.json
+python run.py eval -c configs/test_clean.json
+```
+
+### 3. 查看结果
+
+结果会保存在 `results/YYMMDD_HHMMSS_ModelName_SYMBOL/` 目录下：
+- 📊 `report.md` - 专业交易报告（Markdown表格）
+- 📈 `charts/` - 4种可视化图表
+- 📋 `trading_results.csv` - 完整交易数据
+- 🎯 `metrics/` - 详细性能指标
+
+## 📊 报告示例
+
+### 投资组合表现
+
+| 指标 | 数值 | 说明 |
+|------|------|------|
+| 初始资金 | $100,000.00 | 投资组合起始价值 |
+| 最终价值 | $108,631.25 | 投资组合结束价值 |
+| 收益率 | 8.63% | 相对收益百分比 |
+| 夏普比率 | 1.87 | 优秀 |
+
+### 基准比较
+
+| 基准比较 | 本策略 | Buy & Hold | 差异 |
+|----------|---------|------------|------|
+| 收益率 | 8.63% | 3.29% | +5.34% |
+| 表现 | ✅ 跑赢基准 | 基准策略 | Alpha > 0 |
+
+## 🏗️ 架构组件
+
+The evaluation framework consists of three parts:
+
+- **VLLM Server**: The server that provides the API for the fine-tuned LLM. We will use the Docker image provided by the VLLM team. We will explore how to deploy both a LLM and a LoRA head.
 
 - **Qdrant Vector Database**: We will use Qdrant as the vector database for memory storage.
 
 - **Main Framework**: After deploying the VLLM server and Qdrant vector database, we will demonstrate how to run the evaluation framework to assess trading performance.
+
+## ⚙️ 配置说明
 
 ### Credentials
 
