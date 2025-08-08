@@ -72,6 +72,44 @@ python run.py eval -c configs/test_clean.json
 | 收益率 | 8.63% | 3.29% | +5.34% |
 | 表现 | ✅ 跑赢基准 | 基准策略 | Alpha > 0 |
 
+## 🛠️ 快速CLI参考
+
+### 主要命令
+
+```bash
+# ⚡ 一键运行 (推荐)
+python run.py run-all -c configs/quick_test.json      # 快速测试 (~5分钟)
+python run.py run-all -c configs/test_clean.json      # 标准测试 (~10分钟)  
+python run.py run-all -c configs/extended_test.json   # 扩展测试 (~30分钟)
+
+# 📝 分步执行
+python run.py warmup -c configs/test_clean.json       # 预热阶段
+python run.py test -c configs/test_clean.json         # 测试阶段
+python run.py eval -c configs/test_clean.json         # 评估阶段
+
+# 🔧 检查点恢复
+python run.py warmup-checkpoint -c configs/test_clean.json
+python run.py test-checkpoint -c configs/test_clean.json
+```
+
+### 配置文件说明
+
+| 配置文件 | 描述 | 用途 | 预计时间 |
+|----------|------|------|----------|
+| `configs/quick_test.json` | 快速测试配置 | 功能验证 | ~5分钟 |
+| `configs/test_clean.json` | 标准测试配置 | 正常评估 | ~10分钟 |
+| `configs/extended_test.json` | 扩展测试配置 | 深度分析 | ~30分钟 |
+
+### 查看帮助
+
+```bash
+python run.py --help              # 显示所有命令
+python run.py run-all --help      # 显示run-all命令帮助
+python run.py warmup --help       # 显示warmup命令帮助
+```
+
+详细CLI文档请参考：[docs/10-cli-reference.md](docs/10-cli-reference.md)
+
 ## 🏗️ 架构组件
 
 The evaluation framework consists of three parts:

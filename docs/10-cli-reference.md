@@ -12,6 +12,58 @@ python run.py [COMMAND] [OPTIONS]
 
 ## 🚀 主要命令
 
+### ⚡ run-all - 一键运行 (推荐)
+
+自动执行完整的 warmup → test → eval 流程，无需手动运行三个命令。
+
+```bash
+python run.py run-all [OPTIONS]
+```
+
+**选项**:
+- `-c, --config-path TEXT`: 配置文件路径 [必需]
+
+**示例**:
+```bash
+# 快速测试 (2天数据，~5分钟)
+python run.py run-all -c configs/quick_test.json
+
+# 标准测试 (4天数据，~10分钟) 
+python run.py run-all -c configs/test_clean.json
+
+# 扩展测试 (2周数据，~30分钟)
+python run.py run-all -c configs/extended_test.json
+```
+
+**功能说明**:
+- ✅ 自动执行完整的三阶段流程
+- ✅ 显示每个阶段的进度信息
+- ✅ 错误时优雅退出
+- ✅ 自动显示结果位置
+
+**配置文件对比**:
+
+| 配置文件 | 时间范围 | 预计时间 | Warmup期间 | Test期间 | 用途 |
+|----------|----------|----------|------------|----------|------|
+| `quick_test.json` | 2天 | ~5分钟 | 3/12-3/13 | 3/16-3/17 | 快速验证 |
+| `test_clean.json` | 4天 | ~10分钟 | 3/12-3/13 | 3/16-3/17 | 标准测试 |
+| `extended_test.json` | 2周 | ~30分钟 | 3/01-3/07 | 3/09-3/20 | 深度评估 |
+
+**输出示例**:
+```
+🚀 Starting complete INVESTOR-BENCH pipeline
+📚 Step 1/3: Starting warmup phase
+✅ Warmup phase completed
+🧪 Step 2/3: Starting test phase  
+✅ Test phase completed
+📊 Step 3/3: Starting evaluation phase
+✅ Evaluation phase completed
+🎉 Complete pipeline finished successfully!
+📁 Results saved to: results/250807_HHMMSS_Qwen_Qwen3-8B_JNJ
+📊 View report: results/250807_HHMMSS_Qwen_Qwen3-8B_JNJ/report.md
+📈 View charts: results/250807_HHMMSS_Qwen_Qwen3-8B_JNJ/charts/
+```
+
 ### 1. warmup - 预热训练
 
 初始化智能体的记忆系统，建立基础的市场认知。
@@ -339,15 +391,42 @@ find results/ -name "*checkpoint*" -type d -exec rm -rf {} +
 
 ## 📊 批处理脚本示例
 
-### 完整实验流程
+### 一键运行脚本 (推荐)
 
 ```bash
 #!/bin/bash
-# complete_experiment.sh
+# run_all_experiment.sh
 
-CONFIG_FILE="configs/test_minimal.json"
-echo "🚀 Starting enhanced INVESTOR-BENCH experiment with timestamped outputs"
-echo "⏰ 将创建时间戳目录格式: YYMMDD_HHMMSS_ModelName_SYMBOL"
+CONFIG_FILE="configs/quick_test.json"
+echo "🚀 Running complete INVESTOR-BENCH experiment with one command"
+echo "⏰ Will create timestamped directory: YYMMDD_HHMMSS_ModelName_SYMBOL"
+
+# One-click execution
+python run.py run-all -c $CONFIG_FILE
+
+# Check if successful
+if [ $? -eq 0 ]; then
+    echo "🎉 Complete experiment finished successfully!"
+    
+    # Find latest results directory
+    LATEST_DIR=$(ls -t results/ | head -n 1)
+    echo "📁 Latest results: results/$LATEST_DIR/"
+    echo "📊 Trading report: results/$LATEST_DIR/report.md"
+    echo "📈 Trading data: results/$LATEST_DIR/trading_results.csv"
+    echo "🎨 Charts: results/$LATEST_DIR/charts/"
+else
+    echo "❌ Experiment failed"
+fi
+```
+
+### 传统分步脚本
+
+```bash
+#!/bin/bash
+# step_by_step_experiment.sh
+
+CONFIG_FILE="configs/test_clean.json"
+echo "🚀 Starting INVESTOR-BENCH experiment (step-by-step mode)"
 
 # Step 1: Warmup
 echo "📚 Step 1: Starting warmup phase..."
@@ -359,13 +438,11 @@ else
     python run.py warmup-checkpoint -c $CONFIG_FILE
 fi
 
-# Step 2: Test (automatically finds latest warmup)
+# Step 2: Test
 echo "🧪 Step 2: Starting test phase..."
-echo "🔍 自动查找最新的warmup结果..."
 python run.py test -c $CONFIG_FILE
 if [ $? -eq 0 ]; then
     echo "✅ Test completed successfully"
-    echo "📊 自动生成了交易报告和CSV文件"
 else
     echo "❌ Test failed, trying to resume from checkpoint..."
     python run.py test-checkpoint -c $CONFIG_FILE
@@ -377,18 +454,16 @@ python run.py eval -c $CONFIG_FILE
 if [ $? -eq 0 ]; then
     echo "✅ Evaluation completed successfully"
     
-    # 查找最新结果目录
+    # Find latest results directory
     LATEST_DIR=$(ls -t results/ | head -n 1)
-    echo "📁 最新实验结果位于: results/$LATEST_DIR/"
-    echo "📄 交易报告: results/$LATEST_DIR/report.md"
-    echo "📈 交易数据: results/$LATEST_DIR/trading_results.csv"
-    echo "📊 评估指标: results/$LATEST_DIR/metrics/"
+    echo "📁 Latest results: results/$LATEST_DIR/"
+    echo "📊 Trading report: results/$LATEST_DIR/report.md"
+    echo "📈 Trading data: results/$LATEST_DIR/trading_results.csv"
 else
     echo "❌ Evaluation failed"
 fi
 
-echo "🎉 增强版实验完成!"
-echo "💡 提示: 每次运行都会创建独立的时间戳目录，避免结果覆盖"
+echo "🎉 Step-by-step experiment completed!"
 ```
 
 ### 多配置批处理
@@ -397,19 +472,31 @@ echo "💡 提示: 每次运行都会创建独立的时间戳目录，避免结�
 #!/bin/bash
 # batch_experiments.sh
 
-CONFIGS=("configs/main_unified.json" "configs/gpt4_config.json" "configs/local_vllm.json")
+# 一键运行版本 (推荐)
+CONFIGS=("configs/quick_test.json" "configs/test_clean.json" "configs/extended_test.json")
 
 for config in "${CONFIGS[@]}"; do
-    echo "🔄 Running experiment with config: $config"
+    echo "🔄 Running complete experiment with config: $config"
     
-    python run.py warmup -c "$config"
-    python run.py test -c "$config" 
-    python run.py eval -c "$config"
+    python run.py run-all -c "$config"
     
-    echo "✅ Completed experiment with config: $config"
+    if [ $? -eq 0 ]; then
+        echo "✅ Completed experiment with config: $config"
+    else
+        echo "❌ Failed experiment with config: $config"
+        # 可选：分步执行作为fallback
+        echo "🔄 Trying step-by-step execution..."
+        python run.py warmup -c "$config" && \
+        python run.py test -c "$config" && \
+        python run.py eval -c "$config"
+    fi
 done
 
 echo "🎊 All experiments completed!"
+
+# 显示所有结果
+echo "📊 All experiment results:"
+ls -la results/
 ```
 
 ## 🐛 错误处理
