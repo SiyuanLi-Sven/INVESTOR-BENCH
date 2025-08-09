@@ -1,0 +1,49 @@
+{
+  "experiment_info": {
+    "run_name": "250808_235624_Qwen_Qwen2.5-7B-Instruct_JNJ",
+    "timestamp": "250808_235624",
+    "created_at": "2025-08-08T23:56:24.479424",
+    "model_name": "Qwen_Qwen2.5-7B-Instruct",
+    "trading_symbols": [
+      "JNJ"
+    ]
+  },
+  "model_config": {
+    "chat_model": "Qwen/Qwen2.5-7B-Instruct",
+    "chat_model_type": "instruction",
+    "temperature": 0.6,
+    "max_new_tokens": 500,
+    "embedding_model": "Qwen/Qwen3-Embedding-4B"
+  },
+  "trading_config": {
+    "trading_symbols": [
+      "JNJ"
+    ],
+    "warmup_period": {
+      "start_date": "2020-03-12",
+      "end_date": "2020-06-12"
+    },
+    "test_period": {
+      "start_date": "2020-06-15",
+      "end_date": "2020-09-15"
+    },
+    "initial_cash": 100000,
+    "portfolio_type": "single-asset",
+    "look_back_window": 3,
+    "momentum_window": 3
+  },
+  "agent_config": {
+    "agent_name": "test_agent",
+    "top_k": 5,
+    "memory_db_endpoint": "http://localhost:6333"
+  },
+  "data_paths": {
+    "env_data_path": {
+      "JNJ": "data/jnj.json"
+    },
+    "base_path": "results/250808_235624_Qwen_Qwen2.5-7B-Instruct_JNJ",
+    "results_csv": "results/250808_235624_Qwen_Qwen2.5-7B-Instruct_JNJ/trading_results.csv",
+    "report_md": "results/250808_235624_Qwen_Qwen2.5-7B-Instruct_JNJ/report.md",
+    "charts_dir": "results/250808_235624_Qwen_Qwen2.5-7B-Instruct_JNJ/charts"
+  }
+}

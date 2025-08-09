@@ -15,7 +15,7 @@
   "emb_config": {
     "emb_model_name": "text-embedding-3-large",
     "request_endpoint": "https://api.openai.com/v1/embeddings",
-    "emb_size": 3072,
+    "emb_size": 2560,
     "embedding_timeout": 600
   },
   "env_config": {

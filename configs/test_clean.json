@@ -13,7 +13,7 @@
   },
   "emb_config": {
     "emb_model_name": "Qwen/Qwen3-Embedding-4B",
-    "emb_size": 4096,
+    "emb_size": 2560,
     "embedding_timeout": 60
   },
   "env_config": {

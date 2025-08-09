@@ -1,0 +1,105 @@
+{
+    "chat_config": {
+      "chat_model": "Qwen/Qwen2.5-7B-Instruct",
+      "lora": false,
+      "chat_model_type": "instruction",
+      "chat_model_inference_engine": "openai_compatible",
+      "chat_system_message": "You are a helpful assistant.",
+      "chat_parameters": {
+        "temperature": 0.6
+      },
+      "chat_max_new_token": 500,
+      "chat_request_timeout": 60
+    },
+    "emb_config": {
+      "emb_model_name": "Qwen/Qwen3-Embedding-4B",
+      "emb_size": 2560,
+      "embedding_timeout": 60
+    },
+    "env_config": {
+      "trading_symbols": [
+        "JNJ"
+      ],
+      "warmup_start_time": "2020-03-12",
+      "warmup_end_time": "2020-06-12",
+      "test_start_time": "2020-06-15",
+      "test_end_time": "2020-09-15",
+      "momentum_window_size": 3,
+      "env_data_path": {
+        "JNJ": "data/jnj.json"
+      }
+    },
+    "portfolio_config": {
+      "trading_symbols": [
+        "JNJ"
+      ],
+      "type": "single-asset",
+      "cash": 100000,
+      "look_back_window_size": 3
+    },
+    "agent_config": {
+      "agent_name": "test_agent",
+      "trading_symbols": [
+        "JNJ"
+      ],
+      "character_string": {
+        "JNJ": "You are an investment expert of Johnson & Johnson (JNJ). You have knowledge about pharmaceuticals, medical devices, and consumer health sectors."
+      },
+      "top_k": 5,
+      "memory_db_config": {
+        "memory_db_endpoint": "http://localhost:6333",
+        "memory_importance_upper_bound": 100.0,
+        "memory_importance_score_update_step": 18.0,
+        "trading_symbols": [
+          "JNJ"
+        ],
+        "short": {
+          "db_name": "short",
+          "importance_init_val": 50.0,
+          "decay_recency_factor": 3.0,
+          "decay_importance_factor": 0.92,
+          "clean_up_recency_threshold": 0.05,
+          "clean_up_importance_threshold": 5.0,
+          "jump_upper_threshold": 55.0
+        },
+        "mid": {
+          "db_name": "mid",
+          "importance_init_val": 60.0,
+          "decay_recency_factor": 90.0,
+          "decay_importance_factor": 0.96,
+          "clean_up_recency_threshold": 0.05,
+          "clean_up_importance_threshold": 5.0,
+          "jump_lower_threshold": 55.0,
+          "jump_upper_threshold": 85.0
+        },
+        "long": {
+          "db_name": "long",
+          "importance_init_val": 90.0,
+          "decay_recency_factor": 365.0,
+          "decay_importance_factor": 0.96,
+          "clean_up_recency_threshold": 0.05,
+          "clean_up_importance_threshold": 5.0,
+          "jump_lower_threshold": 85.0
+        },
+        "reflection": {
+          "db_name": "reflection",
+          "importance_init_val": 80.0,
+          "decay_recency_factor": 365.0,
+          "decay_importance_factor": 0.98,
+          "clean_up_recency_threshold": 0.05,
+          "clean_up_importance_threshold": 5.0,
+          "similarity_threshold": 0.95
+        }
+      }
+    },
+    "meta_config": {
+      "run_name": "test_minimal",
+      "momentum_window_size": 3,
+      "warmup_checkpoint_save_path": "results/test_minimal/qwen3-8b/JNJ/warmup_checkpoint",
+      "warmup_output_save_path": "results/test_minimal/qwen3-8b/JNJ/warmup_output",
+      "test_checkpoint_save_path": "results/test_minimal/qwen3-8b/JNJ/test_checkpoint",
+      "test_output_save_path": "results/test_minimal/qwen3-8b/JNJ/test_output",
+      "result_save_path": "results/test_minimal/qwen3-8b/JNJ/final_result",
+      "log_save_path": "results/test_minimal/qwen3-8b/JNJ/log"
+    }
+  }

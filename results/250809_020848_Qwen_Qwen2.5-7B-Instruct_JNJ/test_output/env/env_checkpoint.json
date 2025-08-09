@@ -1,0 +1,11 @@
+{
+  "env_date_path": {
+    "JNJ": "data/jnj.json"
+  },
+  "start_date": "2020-09-15",
+  "end_date": "2020-09-15",
+  "symbol": [
+    "JNJ"
+  ],
+  "momentum_window_size": 3
+}

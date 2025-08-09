@@ -132,7 +132,7 @@ def annualized_volatility(daily_std_dev, trading_days=365):
 
 def calculate_sharpe_ratio(Rp, Rf, sigma_p, price_list, trading_days=252):
     if sigma_p == 0:
-        raise ValueError("Standard deviation cannot be zero.")
+        return 0.0  # 当标准差为0时返回0而不是抛出异常
     Rp = Rp / (len(price_list) / trading_days)
     return (Rp - Rf) / sigma_p
 

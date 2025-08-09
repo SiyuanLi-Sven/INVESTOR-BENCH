@@ -36,14 +36,14 @@ docker run -p 6333:6333 qdrant/qdrant
 
 ```bash
 # ⚡ 一键运行 (推荐)
-python run.py run-all -c configs/quick_test.json      # 快速测试 (~5分钟)
-python run.py run-all -c configs/test_clean.json      # 标准测试 (~10分钟)
-python run.py run-all -c configs/extended_test.json   # 扩展测试 (~30分钟)
+python run.py run-all -c configs/quick_test.json      # 快速测试
+python run.py run-all -c configs/test_standard.json      # 标准测试
+
 
 # 📝 分步执行 (可选)
-python run.py warmup -c configs/test_clean.json
-python run.py test -c configs/test_clean.json
-python run.py eval -c configs/test_clean.json
+python run.py warmup -c configs/test_standard.json
+python run.py test -c configs/test_standard.json
+python run.py eval -c configs/test_standard.json
 ```
 
 ### 3. 查看结果
@@ -78,18 +78,19 @@ python run.py eval -c configs/test_clean.json
 
 ```bash
 # ⚡ 一键运行 (推荐)
-python run.py run-all -c configs/quick_test.json      # 快速测试 (~5分钟)
-python run.py run-all -c configs/test_clean.json      # 标准测试 (~10分钟)  
-python run.py run-all -c configs/extended_test.json   # 扩展测试 (~30分钟)
+python run.py run-all -c configs/quick_test.json      # 快速测试
+python run.py run-all -c configs/test_standard.json      # 标准测试
+python run.py run-all -c configs/test_standard_qwen25.json      # 标准测试
+
 
 # 📝 分步执行
-python run.py warmup -c configs/test_clean.json       # 预热阶段
-python run.py test -c configs/test_clean.json         # 测试阶段
-python run.py eval -c configs/test_clean.json         # 评估阶段
+python run.py warmup -c configs/test_standard.json       # 预热阶段
+python run.py test -c configs/test_standard.json         # 测试阶段
+python run.py eval -c configs/test_standard.json         # 评估阶段
 
 # 🔧 检查点恢复
-python run.py warmup-checkpoint -c configs/test_clean.json
-python run.py test-checkpoint -c configs/test_clean.json
+python run.py warmup-checkpoint -c configs/test_standard.json
+python run.py test-checkpoint -c configs/test_standard.json
 ```
 
 ### 配置文件说明
@@ -97,7 +98,7 @@ python run.py test-checkpoint -c configs/test_clean.json
 | 配置文件 | 描述 | 用途 | 预计时间 |
 |----------|------|------|----------|
 | `configs/quick_test.json` | 快速测试配置 | 功能验证 | ~5分钟 |
-| `configs/test_clean.json` | 标准测试配置 | 正常评估 | ~10分钟 |
+| `configs/test_standard.json` | 标准测试配置 | 正常评估 | ~10分钟 |
 | `configs/extended_test.json` | 扩展测试配置 | 深度分析 | ~30分钟 |
 
 ### 查看帮助
