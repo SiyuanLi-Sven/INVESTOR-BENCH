@@ -38,6 +38,9 @@ docker run -p 6333:6333 qdrant/qdrant
 # ⚡ 一键运行 (推荐)
 python run.py run-all -c configs/quick_test.json      # 快速测试
 python run.py run-all -c configs/test_standard.json      # 标准测试
+python run.py run-all -c configs/test_standard_qwen25.json
+python run.py run-all -c configs/test_minimal_qwen25.json
+python run.py run-all -c configs/test_minimal.json
 
 
 # 📝 分步执行 (可选)

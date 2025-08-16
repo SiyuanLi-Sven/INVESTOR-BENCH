@@ -201,518 +201,12 @@ def load_existing_meta_config(config: Dict, base_path: str) -> Dict:
     return config
 
 
-def load_market_data_for_charts(data_path: str, start_date: str, end_date: str) -> Dict:
-    """基于原始框架加载市场数据"""
-    try:
-        with open(data_path, 'r') as f:
-            data = json.load(f)
-        
-        dates = []
-        prices = []
-        
-        for date_str, content in data.items():
-            if content and 'prices' in content and content['prices'] is not None:
-                date_obj = pd.to_datetime(date_str)
-                if pd.to_datetime(start_date) <= date_obj <= pd.to_datetime(end_date):
-                    dates.append(date_obj)
-                    prices.append(content['prices'])
-        
-        return {
-            'dates': dates,
-            'prices': prices
-        }
-        
-    except Exception as e:
-        logger.error(f"加载市场数据失败: {e}")
-        return {'dates': [], 'prices': []}
 
-def load_model_actions_for_charts(base_path: str, start_date: str, end_date: str, ticker: str) -> Dict:
-    """基于原始框架加载模型决策数据"""
-    try:
-        from src.agent import FinMemAgent
-        
-        # 加载agent检查点 - 找到正确的根路径
-        # base_path可能指向final_result，需要找到真正的根目录
-        root_path = base_path
-        if base_path.endswith('final_result'):
-            root_path = os.path.dirname(base_path)
-        
-        logger.info(f"根路径: {root_path}")
-        action_path = os.path.join(root_path, "test_output", "agent")
-        logger.info(f"检查agent路径: {action_path}, 存在: {os.path.exists(action_path)}")
-        
-        if not os.path.exists(action_path):
-            # 尝试final_result下的agent
-            action_path = os.path.join(root_path, "final_result", "agent")
-            logger.info(f"尝试final_result路径: {action_path}, 存在: {os.path.exists(action_path)}")
-            
-        if not os.path.exists(action_path):
-            raise FileNotFoundError(f"无法找到agent检查点在: {root_path}")
-        
-        agent = FinMemAgent.load_checkpoint(path=action_path)
-        
-        # 获取动作记录 - 使用原始框架逻辑
-        action_records = agent.portfolio.get_action_record()
-        logger.info(f"获取到动作记录: {action_records}")
-        
-        # action_records是一个字典，包含date, price, symbol, position列表
-        if isinstance(action_records, dict) and 'date' in action_records:
-            dates = action_records['date']
-            positions = action_records['position']  # 这是原始框架的direction: -1, 0, 1
-            symbols = action_records.get('symbol', [ticker] * len(dates))
-            
-            logger.info(f"解析到交易记录数量: {len(dates)}")
-            logger.info(f"日期样本: {dates[:3] if len(dates) > 3 else dates}")
-            logger.info(f"持仓样本: {positions[:3] if len(positions) > 3 else positions}")
-            
-            actions_data = []
-            for i, (date_item, position_item, symbol_item) in enumerate(zip(dates, positions, symbols)):
-                try:
-                    date_obj = pd.to_datetime(date_item)
-                    if pd.to_datetime(start_date) <= date_obj <= pd.to_datetime(end_date):
-                        actions_data.append({
-                            'date': date_obj,
-                            'direction': position_item,  # -1=SELL, 0=HOLD, 1=BUY
-                            'symbol': symbol_item if isinstance(symbol_item, str) else ticker
-                        })
-                except Exception as e:
-                    logger.warning(f"处理记录 {i} 失败: {e}")
-                    continue
-        else:
-            logger.warning(f"无法解析动作记录格式: {type(action_records)}")
-            actions_data = []
-        
-        # 按日期排序
-        actions_data.sort(key=lambda x: x['date'])
-        
-        return {
-            'dates': [a['date'] for a in actions_data],
-            'directions': [a['direction'] for a in actions_data],
-            'symbols': [a['symbol'] for a in actions_data]
-        }
-        
-    except Exception as e:
-        logger.error(f"加载模型决策数据失败: {e}")
-        return {'dates': [], 'directions': [], 'symbols': []}
-
-def generate_enhanced_trading_csv_original_framework(market_data: Dict, model_actions: Dict, base_path: str, config: Dict, csv_filename: str = "trading_results_original_framework.csv"):
-    """基于原始框架逻辑生成增强CSV"""
-    try:
-        dates = market_data['dates']
-        prices = market_data['prices']
-        actions = model_actions['directions']
-        
-        if len(dates) != len(prices) or len(dates) != len(actions):
-            logger.warning("数据长度不匹配，尝试对齐数据...")
-            min_len = min(len(dates), len(prices), len(actions))
-            dates = dates[:min_len]
-            prices = prices[:min_len]
-            actions = actions[:min_len]
-        
-        # 基于原始框架逻辑计算组合价值
-        initial_capital = 100000
-        portfolio_values = []
-        cumulative_returns = []
-        
-        # 计算每日的理论投资组合价值
-        cumulative_log_return = 0
-        for i in range(len(dates)):
-            if i == 0:
-                portfolio_values.append(initial_capital)
-                cumulative_returns.append(0.0)
-            else:
-                # 原始框架逻辑：daily_return = action * ln(price_t / price_t-1)
-                daily_log_return = actions[i-1] * np.log(prices[i] / prices[i-1])
-                cumulative_log_return += daily_log_return
-                
-                # 转换为组合价值
-                portfolio_value = initial_capital * np.exp(cumulative_log_return)
-                portfolio_values.append(portfolio_value)
-                
-                # 累计收益率
-                cumulative_return = (portfolio_value / initial_capital - 1) * 100
-                cumulative_returns.append(cumulative_return)
-        
-        # 生成CSV数据
-        csv_data = []
-        meta_config = config["meta_config"]
-        symbols = config["env_config"]["trading_symbols"][0]
-        
-        for i, (date, price, action, portfolio_value, cum_return) in enumerate(
-            zip(dates, prices, actions, portfolio_values, cumulative_returns)
-        ):
-            # 转换action到可读格式
-            if action == 1:
-                action_str = "BUY"
-                position_desc = "Long Position (100%)"
-            elif action == -1:
-                action_str = "SELL"
-                position_desc = "Short Position (100%)"
-            else:
-                action_str = "HOLD"
-                position_desc = "Neutral Position (0%)"
-            
-            csv_data.append({
-                'timestamp': meta_config.get('timestamp', ''),
-                'model': meta_config.get('model_name', ''),
-                'symbol': symbols,
-                'date': date.strftime('%Y-%m-%d'),
-                'action': action_str,
-                'direction': action,  # 原始框架的核心：-1, 0, 1
-                'position_description': position_desc,
-                'asset_price': price,
-                'theoretical_portfolio_value': portfolio_value,
-                'cumulative_return_pct': cum_return,
-                'daily_log_return': 0 if i == 0 else actions[i-1] * np.log(prices[i] / prices[i-1]),
-                'status': 'test'
-            })
-        
-        # 保存CSV
-        csv_path = os.path.join(base_path, csv_filename)
-        df = pd.DataFrame(csv_data)
-        df.to_csv(csv_path, index=False, encoding='utf-8')
-        logger.info(f"✅ 基于原始框架的CSV已保存: {csv_path}")
-        logger.info(f"📊 数据包含 {len(df)} 条记录，基于方向预测逻辑")
-        
-    except Exception as e:
-        logger.error(f"生成CSV失败: {e}")
-
-def generate_charts_with_original_framework_logic(market_data: Dict, model_actions: Dict, charts_path: str, config: Dict, period_name: str = "test"):
-    """基于原始框架逻辑生成图表"""
-    try:
-        dates = market_data['dates']
-        prices = market_data['prices'] 
-        actions = model_actions['directions']
-        
-        symbols = config["env_config"]["trading_symbols"][0]
-        model_name = config["meta_config"].get("model_name", "Model")
-        period_display = period_name.capitalize()
-        
-        # 1. 生成累计收益率对比图
-        generate_returns_comparison_original_framework(dates, prices, actions, charts_path, symbols, model_name, period_name, period_display)
-        
-        # 2. 生成投资组合价值图
-        generate_portfolio_value_original_framework(dates, prices, actions, charts_path, symbols, model_name, period_name, period_display)
-        
-        logger.info("✅ 基于原始框架的图表生成完成")
-        
-    except Exception as e:
-        logger.error(f"生成图表失败: {e}")
-
-def generate_returns_comparison_original_framework(dates, prices, actions, charts_path, symbols, model_name, period_name, period_display):
-    """基于原始框架生成收益率对比图"""
-    plt.figure(figsize=(14, 8))
-    
-    # 计算策略累计收益率（基于原始框架逻辑）
-    strategy_returns = [0]  # 从0开始
-    cumulative_log_return = 0
-    
-    for i in range(1, len(prices)):
-        daily_log_return = actions[i-1] * np.log(prices[i] / prices[i-1])
-        cumulative_log_return += daily_log_return
-        strategy_returns.append(cumulative_log_return * 100)  # 转换为百分比
-    
-    # Buy&Hold基准收益率
-    buyhold_returns = [(prices[i] / prices[0] - 1) * 100 for i in range(len(prices))]
-    
-    # 绘制策略收益率
-    plt.plot(dates, strategy_returns,
-             marker='o', linewidth=2.5, markersize=4, color='#2E86AB',
-             label=f'{model_name} Strategy (Original Framework)')
-    
-    # 绘制基准收益率
-    plt.plot(dates, buyhold_returns,
-             linewidth=2.5, color='orange', alpha=0.8,
-             label=f'{symbols} Buy&Hold')
-    
-    # 标记交易信号
-    buy_indices = [i for i, action in enumerate(actions) if action == 1]
-    sell_indices = [i for i, action in enumerate(actions) if action == -1]
-    
-    if buy_indices:
-        buy_dates = [dates[i] for i in buy_indices]
-        buy_returns = [strategy_returns[i] for i in buy_indices]
-        plt.scatter(buy_dates, buy_returns,
-                   color='green', s=100, marker='^', alpha=0.8, label='Buy Signal', zorder=5)
-    
-    if sell_indices:
-        sell_dates = [dates[i] for i in sell_indices]
-        sell_returns = [strategy_returns[i] for i in sell_indices]
-        plt.scatter(sell_dates, sell_returns,
-                   color='red', s=100, marker='v', alpha=0.8, label='Sell Signal', zorder=5)
-    
-    plt.axhline(y=0, color='black', linestyle='-', alpha=0.3)
-    plt.title(f'{symbols} Cumulative Returns Comparison ({period_display} Period - Original Framework Logic)',
-              fontsize=16, fontweight='bold')
-    plt.xlabel('Date', fontsize=12)
-    plt.ylabel('Cumulative Return (%)', fontsize=12)
-    plt.grid(True, alpha=0.3)
-    plt.legend()
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.savefig(f"{charts_path}/returns_comparison_{period_name}_period.png", dpi=300, bbox_inches='tight')
-    plt.close()
-
-def generate_portfolio_value_original_framework(dates, prices, actions, charts_path, symbols, model_name, period_name, period_display):
-    """基于原始框架生成投资组合价值图"""
-    fig, ax1 = plt.subplots(figsize=(14, 8))
-    
-    # 计算理论组合价值（基于原始框架）
-    initial_capital = 100000
-    portfolio_values = [initial_capital]
-    cumulative_log_return = 0
-    
-    for i in range(1, len(prices)):
-        daily_log_return = actions[i-1] * np.log(prices[i] / prices[i-1])
-        cumulative_log_return += daily_log_return
-        portfolio_value = initial_capital * np.exp(cumulative_log_return)
-        portfolio_values.append(portfolio_value)
-    
-    # 左坐标轴：投资组合价值
-    color1 = '#2E86AB'
-    ax1.set_xlabel('Date', fontsize=12)
-    ax1.set_ylabel('Theoretical Portfolio Value ($)', color=color1, fontsize=12, fontweight='bold')
-    ax1.plot(dates, portfolio_values,
-             marker='o', linewidth=2.5, markersize=4, color=color1,
-             label='Portfolio Value (Original Framework)', alpha=0.8)
-    ax1.axhline(y=initial_capital, color=color1, linestyle='--', alpha=0.5,
-                label=f'Initial Capital: ${initial_capital:,}')
-    ax1.tick_params(axis='y', labelcolor=color1)
-    ax1.grid(True, alpha=0.2)
-    
-    # 右坐标轴：资产价格
-    ax2 = ax1.twinx()
-    color2 = '#F39C12'
-    ax2.set_ylabel('Asset Price ($)', color=color2, fontsize=12, fontweight='bold')
-    
-    # 归一化价格
-    initial_price = prices[0]
-    price_scale = initial_capital / initial_price
-    normalized_prices = [p * price_scale for p in prices]
-    
-    ax2.plot(dates, normalized_prices,
-            linewidth=2.5, color=color2, alpha=0.7,
-            label=f'{symbols} Price (Normalized)')
-    ax2_ticks = ax2.get_yticks()
-    ax2.set_yticklabels([f'${tick/price_scale:.1f}' for tick in ax2_ticks])
-    ax2.tick_params(axis='y', labelcolor=color2)
-    
-    # 标记交易信号
-    buy_indices = [i for i, action in enumerate(actions) if action == 1]
-    sell_indices = [i for i, action in enumerate(actions) if action == -1]
-    
-    if buy_indices:
-        buy_dates = [dates[i] for i in buy_indices]
-        buy_values = [portfolio_values[i] for i in buy_indices]
-        ax1.scatter(buy_dates, buy_values,
-                   color='green', s=100, marker='^', alpha=0.8, label='Buy Signal',
-                   zorder=5, edgecolor='darkgreen')
-    
-    if sell_indices:
-        sell_dates = [dates[i] for i in sell_indices]
-        sell_values = [portfolio_values[i] for i in sell_indices]
-        ax1.scatter(sell_dates, sell_values,
-                   color='red', s=100, marker='v', alpha=0.8, label='Sell Signal',
-                   zorder=5, edgecolor='darkred')
-    
-    plt.title(f'{symbols} Portfolio Performance vs Asset Price ({period_display} Period - Original Framework)',
-              fontsize=16, fontweight='bold', pad=20)
-    
-    # 合并图例
-    lines1, labels1 = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', framealpha=0.9)
-    
-    plt.xticks(rotation=45)
-    fig.tight_layout()
-    plt.savefig(f"{charts_path}/portfolio_value_{period_name}_period.png", dpi=300, bbox_inches='tight', facecolor='white')
-    plt.close()
-
-def generate_comparison_charts_and_update_report(config: Dict) -> None:
-    """生成对比图表并更新MD报告"""
-    try:
-        logger.info("🔍 开始生成对比图表和更新报告...")
-        
-        base_path = config["meta_config"]["result_save_path"]
-        charts_path = f"{base_path}/charts"
-        
-        # 检查是否有warmup和test期的图表
-        warmup_returns_chart = f"{charts_path}/returns_comparison_warmup_period.png"
-        test_returns_chart = f"{charts_path}/returns_comparison_test_period.png"
-        warmup_portfolio_chart = f"{charts_path}/portfolio_value_warmup_period.png"
-        test_portfolio_chart = f"{charts_path}/portfolio_value_test_period.png"
-        
-        if all(os.path.exists(f) for f in [warmup_returns_chart, test_returns_chart, warmup_portfolio_chart, test_portfolio_chart]):
-            # 生成并排对比图
-            generate_side_by_side_comparison(
-                warmup_returns_chart, test_returns_chart, 
-                f"{charts_path}/returns_comparison_side_by_side.png",
-                "Cumulative Returns Comparison: Warmup vs Test Period"
-            )
-            
-            generate_side_by_side_comparison(
-                warmup_portfolio_chart, test_portfolio_chart,
-                f"{charts_path}/portfolio_value_side_by_side.png", 
-                "Portfolio Value Comparison: Warmup vs Test Period"
-            )
-            
-            logger.info("✅ 并排对比图已生成")
-        
-        # 更新或创建MD报告
-        update_md_report_with_charts(config)
-        logger.info("✅ MD报告已更新")
-        
-    except Exception as e:
-        logger.error(f"生成对比图表和更新报告失败: {e}")
-
-def generate_side_by_side_comparison(chart1_path: str, chart2_path: str, output_path: str, title: str) -> None:
-    """生成并排对比图"""
-    import matplotlib.image as mpimg
-    
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(28, 10))
-    
-    # 加载并显示图片
-    img1 = mpimg.imread(chart1_path)
-    img2 = mpimg.imread(chart2_path)
-    
-    ax1.imshow(img1)
-    ax1.axis('off')
-    ax1.set_title('Warmup Period', fontsize=16, fontweight='bold', pad=20)
-    
-    ax2.imshow(img2) 
-    ax2.axis('off')
-    ax2.set_title('Test Period', fontsize=16, fontweight='bold', pad=20)
-    
-    fig.suptitle(title, fontsize=20, fontweight='bold', y=0.95)
-    plt.tight_layout()
-    plt.subplots_adjust(top=0.9)
-    plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
-    plt.close()
-
-def update_md_report_with_charts(config: Dict) -> None:
-    """更新MD报告，包含图表链接"""
-    base_path = config["meta_config"]["result_save_path"]
-    report_path = f"{base_path}/enhanced_report.md"
-    
-    # 获取模型和符号信息
-    model_name = config["meta_config"].get("model_name", "Model")
-    symbols = config["meta_config"].get("symbols", "Asset")
-    timestamp = config["meta_config"].get("timestamp", "")
-    
-    # 如果仍然是默认值，尝试从其他地方获取
-    if model_name == "Model" and "chat_config" in config:
-        model_name = config["chat_config"].get("chat_model", "Model")
-    if symbols == "Asset" and "env_config" in config:
-        symbols = "_".join(config["env_config"].get("trading_symbols", ["Asset"]))
-    
-    # 构建报告内容
-    report_content = f"""# INVESTOR-BENCH Enhanced Analysis Report
-
-## Model Information
-- **Model**: {model_name}
-- **Asset**: {symbols}
-- **Timestamp**: {timestamp}
-- **Analysis Date**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-
-## Performance Overview
-
-### Warmup Period Performance
-![Warmup Returns](./charts/returns_comparison_warmup_period.png)
-![Warmup Portfolio](./charts/portfolio_value_warmup_period.png)
-
-### Test Period Performance  
-![Test Returns](./charts/returns_comparison_test_period.png)
-![Test Portfolio](./charts/portfolio_value_test_period.png)
-
-### Side-by-Side Comparison
-![Returns Comparison](./charts/returns_comparison_side_by_side.png)
-![Portfolio Comparison](./charts/portfolio_value_side_by_side.png)
-
-## Data Files
-- **Warmup Period CSV**: [trading_results_warmup_period.csv](./trading_results_warmup_period.csv)
-- **Test Period CSV**: [trading_results_test_period.csv](./trading_results_test_period.csv)
-
-## Analysis Notes
-- This report was generated using the original INVESTOR-BENCH framework logic
-- Position values (-1, 0, 1) represent direction predictions, not actual trading quantities
-- Theoretical portfolio values are calculated based on 100% position allocation according to predictions
-- All returns are calculated using logarithmic return methodology: daily_return = position * ln(price_t / price_t-1)
-
----
-Generated by INVESTOR-BENCH Enhanced Analysis Pipeline
-"""
-    
-    # 写入报告
-    with open(report_path, 'w', encoding='utf-8') as f:
-        f.write(report_content)
-    
-    logger.info(f"📄 增强报告已保存: {report_path}")
-
-def generate_charts_original_framework(config: Dict, include_warmup: bool = False) -> None:
-    """基于原始INVESTOR-BENCH框架逻辑的图表生成"""
-    try:
-        logger.info("🚀 开始基于原始框架生成图表...")
-        
-        # 获取配置
-        symbols = config["env_config"]["trading_symbols"][0]  # 单资产
-        model_name = config["chat_config"]["chat_model"].replace("/", "_")
-        base_path = config["meta_config"]["result_save_path"]
-        charts_path = f"{base_path}/charts"
-        data_path = list(config["env_config"]["env_data_path"].values())[0]
-        
-        # 确保charts目录存在
-        ensure_path(charts_path)
-        
-        # 定义时间段配置
-        periods = []
-        if include_warmup:
-            periods.append({
-                'name': 'warmup',
-                'start_date': config["env_config"]["warmup_start_time"],
-                'end_date': config["env_config"]["warmup_end_time"],
-                'display_name': 'Warmup Period'
-            })
-        periods.append({
-            'name': 'test',
-            'start_date': config["env_config"]["test_start_time"],
-            'end_date': config["env_config"]["test_end_time"],
-            'display_name': 'Test Period'
-        })
-        
-        # 分别处理每个时间段
-        for period in periods:
-            logger.info(f"📊 处理{period['display_name']}: {period['start_date']} 到 {period['end_date']}")
-            
-            # 1. 加载市场数据
-            market_data = load_market_data_for_charts(data_path, period['start_date'], period['end_date'])
-            
-            # 2. 加载模型决策数据
-            model_actions = load_model_actions_for_charts(base_path, period['start_date'], period['end_date'], symbols)
-            
-            # 3. 生成CSV
-            csv_filename = f"trading_results_{period['name']}_period.csv"
-            generate_enhanced_trading_csv_original_framework(
-                market_data, model_actions, base_path, config, csv_filename
-            )
-            
-            # 4. 生成图表
-            generate_charts_with_original_framework_logic(
-                market_data, model_actions, charts_path, config, period_name=period['name']
-            )
-            
-            logger.info(f"✅ {period['display_name']}的图表和CSV已生成")
-        
-        logger.info(f"🎉 所有阶段的基于原始框架的图表已生成: {charts_path}")
-        
-    except Exception as e:
-        logger.error(f"基于原始框架生成图表时出错: {e}")
-        logger.error(f"具体错误: {e.__class__.__name__}: {str(e)}")
 
 def generate_charts(config: Dict) -> None:
-    """Generate professional investment analysis charts"""
+    """基于原始框架逻辑生成投资分析图表"""
     meta_config = config["meta_config"]
     charts_path = meta_config["charts_save_path"]
-    csv_path = meta_config["csv_save_path"]
     base_path = meta_config["base_path"]
     
     # 确保图表目录存在
@@ -723,60 +217,144 @@ def generate_charts(config: Dict) -> None:
     sns.set_palette("husl")
     
     try:
-        # 读取CSV数据和metadata
-        if not os.path.exists(csv_path):
-            logger.warning(f"CSV文件不存在: {csv_path}")
-            create_placeholder_chart(charts_path, meta_config, "CSV文件不存在")
-            return
+        # 使用本项目的agent代码
+        from src.agent import FinMemAgent
         
-        df = pd.read_csv(csv_path)
-        trading_df = df[
-            (df['action'] != 'EXPERIMENT_RUN') & 
-            (df['action'] != 'ERROR') &
-            (df['action'].notna())
-        ].copy()
+        # 获取配置信息
+        symbol = meta_config['symbols']
+        model_name = meta_config.get('model_name', 'Model')
         
-        if trading_df.empty:
-            logger.warning("没有有效交易数据")
-            create_placeholder_chart(charts_path, meta_config, "没有有效交易数据")
-            return
-        
-        # 读取metadata获取基准数据
+        # 读取metadata获取时间段和数据路径
         metadata_path = f"{base_path}/metadata.json"
         metadata = {}
         if os.path.exists(metadata_path):
             with open(metadata_path, 'r', encoding='utf-8') as f:
                 metadata = json.load(f)
         
-        # 获取基准数据路径
-        symbol = meta_config['symbols']
+        # 获取warmup和test期时间段
+        warmup_start = metadata.get('trading_config', {}).get('warmup_period', {}).get('start_date', '2020-03-12')
+        warmup_end = metadata.get('trading_config', {}).get('warmup_period', {}).get('end_date', '2020-03-20')
+        test_start = metadata.get('trading_config', {}).get('test_period', {}).get('start_date', '2020-03-23')
+        test_end = metadata.get('trading_config', {}).get('test_period', {}).get('end_date', '2020-03-30')
         data_path = metadata.get('data_paths', {}).get('env_data_path', {}).get(symbol, f'data/{symbol.lower()}.json')
         
-        # 转换日期格式
-        trading_df['date'] = pd.to_datetime(trading_df['date'])
-        trading_df = trading_df.sort_values('date').reset_index(drop=True)
+        # 加载agent检查点获取action数据
+        action_path = os.path.join(base_path, "final_result", "agent")
+        if not os.path.exists(action_path):
+            # 尝试其他可能的路径
+            action_path = os.path.join(base_path, "test_output", "agent")
         
-        # 读取基准资产价格数据
-        benchmark_data = load_benchmark_data(data_path, trading_df['date'].min(), trading_df['date'].max())
+        if not os.path.exists(action_path):
+            logger.warning(f"无法找到agent检查点: {action_path}")
+            create_placeholder_chart(charts_path, meta_config, "Cannot find agent checkpoint")
+            return
+            
+        agent = FinMemAgent.load_checkpoint(path=action_path)
+        action_records = agent.portfolio.get_action_record()
         
-        # 1. 投资组合价值变化图 (含基准对比)
-        generate_portfolio_value_chart(trading_df, benchmark_data, charts_path, meta_config)
+        # 加载市场价格数据
+        with open(data_path, 'r') as f:
+            market_data = json.load(f)
         
-        # 2. 累计收益率对比图
-        generate_returns_comparison_chart(trading_df, benchmark_data, charts_path, meta_config)
+        # 整理数据 - 包含warmup和test期
+        all_data = []
         
-        # 3. 交易信号标记图
-        generate_trading_signals_chart(trading_df, benchmark_data, charts_path, meta_config)
+        # 从action_records解析数据
+        if isinstance(action_records, dict) and 'date' in action_records:
+            record_dates = action_records['date']
+            record_positions = action_records['position']  # -1, 0, 1
+            
+            # 处理所有数据（warmup + test）
+            for i, date_str in enumerate(record_dates):
+                if isinstance(date_str, str):
+                    date_obj = pd.to_datetime(date_str)
+                else:
+                    date_obj = pd.to_datetime(date_str)
+                
+                # 确定时期
+                period = None
+                if pd.to_datetime(warmup_start) <= date_obj <= pd.to_datetime(warmup_end):
+                    period = 'warmup'
+                elif pd.to_datetime(test_start) <= date_obj <= pd.to_datetime(test_end):
+                    period = 'test'
+                
+                if period:
+                    # 获取对应的市场价格
+                    date_key = date_obj.strftime('%Y-%m-%d')
+                    if date_key in market_data and market_data[date_key] and 'prices' in market_data[date_key]:
+                        all_data.append({
+                            'date': date_obj,
+                            'price': market_data[date_key]['prices'],
+                            'action': record_positions[i],
+                            'period': period
+                        })
         
-        # 4. 风险收益分析图
-        generate_risk_return_analysis_chart(trading_df, benchmark_data, charts_path, meta_config)
+        if not all_data:
+            logger.warning("无法获取有效的交易数据")
+            create_placeholder_chart(charts_path, meta_config, "Cannot obtain valid trading data")
+            return
         
-        logger.info(f"✅ 所有投资分析图表已生成: {charts_path}")
+        # 按日期排序
+        all_data.sort(key=lambda x: x['date'])
+        
+        # 基于原始框架逻辑计算投资组合表现 - 每个期间独立计算
+        initial_capital = 100000
+        
+        # 分别处理warmup和test期间
+        warmup_data = [d for d in all_data if d['period'] == 'warmup']
+        test_data = [d for d in all_data if d['period'] == 'test']
+        
+        def calculate_period_performance(period_data, period_name):
+            """计算单个期间的投资表现，从初始资本开始"""
+            if not period_data:
+                return
+                
+            cumulative_log_return = 0
+            initial_price = period_data[0]['price']
+            
+            for i, data_point in enumerate(period_data):
+                if i == 0:
+                    data_point['portfolio_value'] = initial_capital
+                    data_point['cumulative_return'] = 0.0
+                    data_point['buyhold_return'] = 0.0
+                else:
+                    # 原始框架核心逻辑：daily_return = action * ln(price_t / price_t-1)
+                    daily_log_return = period_data[i-1]['action'] * np.log(data_point['price'] / period_data[i-1]['price'])
+                    cumulative_log_return += daily_log_return
+                    
+                    # 转换为组合价值
+                    portfolio_value = initial_capital * np.exp(cumulative_log_return)
+                    data_point['portfolio_value'] = portfolio_value
+                    
+                    # 累计收益率百分比
+                    cumulative_return = (portfolio_value / initial_capital - 1) * 100
+                    data_point['cumulative_return'] = cumulative_return
+                    
+                    # Buy&Hold基准收益率（相对于该期间起始价格）
+                    data_point['buyhold_return'] = (data_point['price'] / initial_price - 1) * 100
+        
+        # 分别计算两个期间的表现
+        calculate_period_performance(warmup_data, 'warmup')
+        calculate_period_performance(test_data, 'test')
+        
+        # 创建DataFrame
+        chart_data = pd.DataFrame(all_data)
+        
+        # 找到warmup和test期的分界点
+        warmup_end_date = pd.to_datetime(warmup_end)
+        test_start_date = pd.to_datetime(test_start)
+        
+        # 生成图表
+        generate_combined_charts_with_periods(chart_data, charts_path, meta_config, symbol, model_name, warmup_end_date, test_start_date)
+        
+        logger.info(f"✅ 基于原始框架逻辑的合并时期图表已生成: {charts_path}")
         
     except Exception as e:
         logger.error(f"生成图表时出错: {e}")
         logger.error(f"具体错误: {e.__class__.__name__}: {str(e)}")
-        create_placeholder_chart(charts_path, meta_config, f"图表生成错误: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        create_placeholder_chart(charts_path, meta_config, f"Chart generation error: {str(e)}")
 
 
 def load_benchmark_data(data_path: str, start_date: pd.Timestamp, end_date: pd.Timestamp) -> pd.DataFrame:
@@ -812,6 +390,591 @@ def load_benchmark_data(data_path: str, start_date: pd.Timestamp, end_date: pd.T
     
     return pd.DataFrame()
 
+
+def generate_combined_charts_with_periods(chart_data: pd.DataFrame, charts_path: str, meta_config: Dict, symbol: str, model_name: str, warmup_end_date: pd.Timestamp, test_start_date: pd.Timestamp) -> None:
+    """Generate combined charts showing both warmup and test periods"""
+    
+    # 1. Portfolio Value Chart
+    generate_combined_portfolio_value_chart(chart_data, charts_path, symbol, model_name, warmup_end_date, test_start_date)
+    
+    # 2. Returns Comparison Chart
+    generate_combined_returns_chart(chart_data, charts_path, symbol, model_name, warmup_end_date, test_start_date)
+    
+    # 3. Trading Signals Chart
+    generate_combined_trading_signals_chart(chart_data, charts_path, symbol, model_name, warmup_end_date, test_start_date)
+    
+    # 4. Risk Return Analysis Chart
+    generate_combined_risk_analysis_chart(chart_data, charts_path, symbol, model_name, warmup_end_date, test_start_date)
+
+def generate_combined_portfolio_value_chart(chart_data: pd.DataFrame, charts_path: str, symbol: str, model_name: str, warmup_end_date: pd.Timestamp, test_start_date: pd.Timestamp) -> None:
+    """Generate combined portfolio value chart with period separation"""
+    fig, ax1 = plt.subplots(figsize=(16, 8))
+    
+    initial_capital = 100000
+    
+    # 分离warmup和test数据
+    warmup_data = chart_data[chart_data['period'] == 'warmup']
+    test_data = chart_data[chart_data['period'] == 'test']
+    
+    # 左坐标轴：投资组合价值
+    color1 = '#2E86AB'
+    ax1.set_xlabel('Date', fontsize=12)
+    ax1.set_ylabel('Theoretical Portfolio Value ($)', color=color1, fontsize=12, fontweight='bold')
+    
+    # 绘制warmup期数据
+    if not warmup_data.empty:
+        ax1.plot(warmup_data['date'], warmup_data['portfolio_value'],
+                 marker='o', linewidth=2.5, markersize=3, color=color1, alpha=0.7,
+                 label='Portfolio Value (Warmup)', linestyle='--')
+    
+    # 绘制test期数据
+    if not test_data.empty:
+        ax1.plot(test_data['date'], test_data['portfolio_value'],
+                 marker='o', linewidth=2.5, markersize=4, color=color1,
+                 label='Portfolio Value (Test)', alpha=0.9)
+    
+    # 初始资金参考线
+    ax1.axhline(y=initial_capital, color=color1, linestyle=':', alpha=0.5,
+                label=f'Initial Capital: ${initial_capital:,}')
+    
+    ax1.tick_params(axis='y', labelcolor=color1)
+    ax1.grid(True, alpha=0.2)
+    
+    # 右坐标轴：资产价格
+    ax2 = ax1.twinx()
+    color2 = '#F39C12'
+    ax2.set_ylabel('Asset Price ($)', color=color2, fontsize=12, fontweight='bold')
+    
+    # 归一化价格
+    initial_price = chart_data['price'].iloc[0]
+    price_scale = initial_capital / initial_price
+    
+    # 绘制warmup期价格
+    if not warmup_data.empty:
+        normalized_warmup_prices = warmup_data['price'] * price_scale
+        ax2.plot(warmup_data['date'], normalized_warmup_prices,
+                linewidth=2, color=color2, alpha=0.5, linestyle='--',
+                label=f'{symbol} Price (Warmup, Normalized)')
+    
+    # 绘制test期价格
+    if not test_data.empty:
+        normalized_test_prices = test_data['price'] * price_scale
+        ax2.plot(test_data['date'], normalized_test_prices,
+                linewidth=2.5, color=color2, alpha=0.8,
+                label=f'{symbol} Price (Test, Normalized)')
+    
+    ax2_ticks = ax2.get_yticks()
+    ax2.set_yticklabels([f'${tick/price_scale:.1f}' for tick in ax2_ticks])
+    ax2.tick_params(axis='y', labelcolor=color2)
+    
+    # 期间分界线
+    ax1.axvline(x=test_start_date, color='red', linestyle='-', alpha=0.8, linewidth=2,
+                label='Test Period Start')
+    
+    # 标记交易信号
+    buy_data = chart_data[chart_data['action'] == 1]
+    sell_data = chart_data[chart_data['action'] == -1]
+    
+    if not buy_data.empty:
+        ax1.scatter(buy_data['date'], buy_data['portfolio_value'],
+                   color='green', s=80, marker='^', alpha=0.8, label='Buy Signal',
+                   zorder=5, edgecolor='darkgreen')
+    
+    if not sell_data.empty:
+        ax1.scatter(sell_data['date'], sell_data['portfolio_value'],
+                   color='red', s=80, marker='v', alpha=0.8, label='Sell Signal',
+                   zorder=5, edgecolor='darkred')
+    
+    plt.title(f'{symbol} Portfolio Performance vs Asset Price (Original Framework)\nWarmup Period (dashed) | Test Period (solid)',
+              fontsize=14, fontweight='bold', pad=20)
+    
+    # 合并图例
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', framealpha=0.9, fontsize=9)
+    
+    plt.xticks(rotation=45)
+    fig.tight_layout()
+    plt.savefig(f"{charts_path}/portfolio_value.png", dpi=300, bbox_inches='tight', facecolor='white')
+    plt.close()
+
+def generate_combined_returns_chart(chart_data: pd.DataFrame, charts_path: str, symbol: str, model_name: str, warmup_end_date: pd.Timestamp, test_start_date: pd.Timestamp) -> None:
+    """Generate combined returns comparison chart"""
+    plt.figure(figsize=(16, 8))
+    
+    # 分离数据
+    warmup_data = chart_data[chart_data['period'] == 'warmup']
+    test_data = chart_data[chart_data['period'] == 'test']
+    
+    # 绘制策略收益率
+    if not warmup_data.empty:
+        plt.plot(warmup_data['date'], warmup_data['cumulative_return'],
+                 marker='o', linewidth=2, markersize=3, color='#2E86AB', alpha=0.7,
+                 label=f'{model_name} Strategy (Warmup)', linestyle='--')
+    
+    if not test_data.empty:
+        plt.plot(test_data['date'], test_data['cumulative_return'],
+                 marker='o', linewidth=2.5, markersize=4, color='#2E86AB',
+                 label=f'{model_name} Strategy (Test)')
+    
+    # 绘制基准收益率
+    if not warmup_data.empty:
+        plt.plot(warmup_data['date'], warmup_data['buyhold_return'],
+                 linewidth=2, color='orange', alpha=0.5, linestyle='--',
+                 label=f'{symbol} Buy&Hold (Warmup)')
+    
+    if not test_data.empty:
+        plt.plot(test_data['date'], test_data['buyhold_return'],
+                 linewidth=2.5, color='orange', alpha=0.8,
+                 label=f'{symbol} Buy&Hold (Test)')
+    
+    # 期间分界线
+    plt.axvline(x=test_start_date, color='red', linestyle='-', alpha=0.8, linewidth=2,
+                label='Test Period Start')
+    
+    # 标记交易信号
+    buy_data = chart_data[chart_data['action'] == 1]
+    sell_data = chart_data[chart_data['action'] == -1]
+    
+    if not buy_data.empty:
+        plt.scatter(buy_data['date'], buy_data['cumulative_return'],
+                   color='green', s=80, marker='^', alpha=0.8, label='Buy Signal', zorder=5)
+    
+    if not sell_data.empty:
+        plt.scatter(sell_data['date'], sell_data['cumulative_return'],
+                   color='red', s=80, marker='v', alpha=0.8, label='Sell Signal', zorder=5)
+    
+    plt.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+    plt.title(f'{symbol} Cumulative Returns Comparison (Original Framework Logic)\nWarmup Period (dashed) | Test Period (solid)',
+              fontsize=14, fontweight='bold')
+    plt.xlabel('Date', fontsize=12)
+    plt.ylabel('Cumulative Return (%)', fontsize=12)
+    plt.grid(True, alpha=0.3)
+    plt.legend(fontsize=9)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(f"{charts_path}/returns_comparison.png", dpi=300, bbox_inches='tight')
+    plt.close()
+
+def generate_combined_trading_signals_chart(chart_data: pd.DataFrame, charts_path: str, symbol: str, model_name: str, warmup_end_date: pd.Timestamp, test_start_date: pd.Timestamp) -> None:
+    """Generate combined trading signals chart"""
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10))
+    
+    # 分离数据
+    warmup_data = chart_data[chart_data['period'] == 'warmup']
+    test_data = chart_data[chart_data['period'] == 'test']
+    
+    # 上图：价格和交易信号
+    if not warmup_data.empty:
+        ax1.plot(warmup_data['date'], warmup_data['price'],
+                 linewidth=2, color='#2E86AB', alpha=0.6, linestyle='--',
+                 label=f'{symbol} Price (Warmup)')
+    
+    if not test_data.empty:
+        ax1.plot(test_data['date'], test_data['price'],
+                 linewidth=2.5, color='#2E86AB',
+                 label=f'{symbol} Price (Test)')
+    
+    # 标记交易信号
+    buy_data = chart_data[chart_data['action'] == 1]
+    sell_data = chart_data[chart_data['action'] == -1]
+    
+    if not buy_data.empty:
+        ax1.scatter(buy_data['date'], buy_data['price'],
+                   color='green', s=100, marker='^', alpha=0.8, label='Buy Signal',
+                   zorder=5, edgecolor='darkgreen', linewidth=1)
+    
+    if not sell_data.empty:
+        ax1.scatter(sell_data['date'], sell_data['price'],
+                   color='red', s=100, marker='v', alpha=0.8, label='Sell Signal',
+                   zorder=5, edgecolor='darkred', linewidth=1)
+    
+    # 期间分界线
+    ax1.axvline(x=test_start_date, color='red', linestyle='-', alpha=0.8, linewidth=2,
+                label='Test Period Start')
+    
+    ax1.set_title(f'{symbol} Price and Trading Signals', fontsize=14, fontweight='bold')
+    ax1.set_ylabel('Price ($)', fontsize=12)
+    ax1.grid(True, alpha=0.3)
+    ax1.legend(fontsize=9)
+    
+    # 下图：持仓状态
+    if not warmup_data.empty:
+        ax2.step(warmup_data['date'], warmup_data['action'], where='post',
+                 linewidth=2, color='purple', alpha=0.6, linestyle='--', label='Position (Warmup)')
+        ax2.fill_between(warmup_data['date'], warmup_data['action'], alpha=0.2,
+                        step='post', color='purple')
+    
+    if not test_data.empty:
+        ax2.step(test_data['date'], test_data['action'], where='post',
+                 linewidth=2.5, color='purple', label='Position (Test)')
+        ax2.fill_between(test_data['date'], test_data['action'], alpha=0.4,
+                        step='post', color='purple')
+    
+    # 期间分界线
+    ax2.axvline(x=test_start_date, color='red', linestyle='-', alpha=0.8, linewidth=2,
+                label='Test Period Start')
+    
+    ax2.set_title('Position State (Original Framework: -1=Short, 0=Neutral, 1=Long)', fontsize=14, fontweight='bold')
+    ax2.set_xlabel('Date', fontsize=12)
+    ax2.set_ylabel('Position Direction', fontsize=12)
+    ax2.set_yticks([-1, 0, 1])
+    ax2.set_yticklabels(['Short (-1)', 'Neutral (0)', 'Long (1)'])
+    ax2.grid(True, alpha=0.3)
+    ax2.legend(fontsize=9)
+    
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(f"{charts_path}/trading_signals.png", dpi=300, bbox_inches='tight')
+    plt.close()
+
+def generate_combined_risk_analysis_chart(chart_data: pd.DataFrame, charts_path: str, symbol: str, model_name: str, warmup_end_date: pd.Timestamp, test_start_date: pd.Timestamp) -> None:
+    """Generate combined risk analysis chart with overlapping distributions"""
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+    
+    # 计算daily returns for both periods
+    def calculate_daily_returns(data):
+        daily_returns = []
+        for i in range(1, len(data)):
+            daily_ret = data.iloc[i-1]['action'] * np.log(data.iloc[i]['price'] / data.iloc[i-1]['price'])
+            daily_returns.append(daily_ret * 100)  # 转换为百分比
+        return daily_returns
+    
+    warmup_data = chart_data[chart_data['period'] == 'warmup'].reset_index(drop=True)
+    test_data = chart_data[chart_data['period'] == 'test'].reset_index(drop=True)
+    
+    warmup_returns = calculate_daily_returns(warmup_data) if len(warmup_data) > 1 else []
+    test_returns = calculate_daily_returns(test_data) if len(test_data) > 1 else []
+    
+    # 1. 收益分布直方图 (overlapping)
+    if warmup_returns:
+        ax1.hist(warmup_returns, bins=15, alpha=0.6, color='skyblue', edgecolor='black',
+                label=f'Warmup Returns (n={len(warmup_returns)})')
+    if test_returns:
+        ax1.hist(test_returns, bins=15, alpha=0.6, color='lightcoral', edgecolor='black',
+                label=f'Test Returns (n={len(test_returns)})')
+    ax1.set_title('Daily Returns Distribution', fontsize=12, fontweight='bold')
+    ax1.set_xlabel('Daily Return (%)')
+    ax1.set_ylabel('Frequency')
+    ax1.grid(True, alpha=0.3)
+    ax1.legend()
+    
+    # 2. 风险-收益散点图
+    if warmup_returns and test_returns:
+        warmup_vol = np.std(warmup_returns)
+        test_vol = np.std(test_returns)
+        warmup_final_return = warmup_data['cumulative_return'].iloc[-1] if not warmup_data.empty else 0
+        test_final_return = test_data['cumulative_return'].iloc[-1] if not test_data.empty else 0
+        
+        ax2.scatter(warmup_vol, warmup_final_return, s=150, c='skyblue', alpha=0.8, marker='s',
+                   edgecolor='black', label='Warmup Period')
+        ax2.scatter(test_vol, test_final_return, s=150, c='lightcoral', alpha=0.8, marker='o',
+                   edgecolor='black', label='Test Period')
+        
+        ax2.set_title('Risk-Return Scatter Plot', fontsize=12, fontweight='bold')
+        ax2.set_xlabel('Volatility (Daily Return Std)')
+        ax2.set_ylabel('Total Return (%)')
+        ax2.grid(True, alpha=0.3)
+        ax2.legend()
+    else:
+        ax2.text(0.5, 0.5, 'Insufficient Data\nfor Risk-Return Analysis',
+                ha='center', va='center', transform=ax2.transAxes, fontsize=12)
+        ax2.set_title('Risk-Return Scatter Plot', fontsize=12, fontweight='bold')
+    
+    # 3. 回撤分析
+    if not warmup_data.empty:
+        warmup_rolling_max = warmup_data['portfolio_value'].expanding().max()
+        warmup_drawdown = (warmup_data['portfolio_value'] - warmup_rolling_max) / warmup_rolling_max * 100
+        ax3.fill_between(warmup_data['date'], warmup_drawdown, 0, alpha=0.4, color='skyblue',
+                        label=f'Warmup DD (Max: {warmup_drawdown.min():.2f}%)')
+        ax3.plot(warmup_data['date'], warmup_drawdown, color='blue', linewidth=1, alpha=0.7)
+    
+    if not test_data.empty:
+        test_rolling_max = test_data['portfolio_value'].expanding().max()
+        test_drawdown = (test_data['portfolio_value'] - test_rolling_max) / test_rolling_max * 100
+        ax3.fill_between(test_data['date'], test_drawdown, 0, alpha=0.4, color='lightcoral',
+                        label=f'Test DD (Max: {test_drawdown.min():.2f}%)')
+        ax3.plot(test_data['date'], test_drawdown, color='darkred', linewidth=1, alpha=0.7)
+    
+    # 期间分界线
+    ax3.axvline(x=test_start_date, color='red', linestyle='-', alpha=0.8, linewidth=2)
+    
+    ax3.set_title('Drawdown Analysis', fontsize=12, fontweight='bold')
+    ax3.set_xlabel('Date')
+    ax3.set_ylabel('Drawdown (%)')
+    ax3.grid(True, alpha=0.3)
+    ax3.legend(fontsize=9)
+    
+    # 4. 滚动夏普比率对比
+    def calculate_rolling_sharpe(returns, window=3):
+        if len(returns) <= window:
+            return []
+        rolling_sharpe = []
+        for i in range(window, len(returns)):
+            window_returns = returns[i-window:i]
+            if np.std(window_returns) > 0:
+                sharpe = np.mean(window_returns) / np.std(window_returns) * np.sqrt(252)
+            else:
+                sharpe = 0
+            rolling_sharpe.append(sharpe)
+        return rolling_sharpe
+    
+    if len(warmup_returns) > 3:
+        warmup_sharpe = calculate_rolling_sharpe(warmup_returns)
+        warmup_sharpe_dates = warmup_data['date'].iloc[3:3+len(warmup_sharpe)]
+        ax4.plot(warmup_sharpe_dates, warmup_sharpe, color='blue', linewidth=2, alpha=0.7,
+                label='Warmup Sharpe')
+    
+    if len(test_returns) > 3:
+        test_sharpe = calculate_rolling_sharpe(test_returns)
+        test_sharpe_dates = test_data['date'].iloc[3:3+len(test_sharpe)]
+        ax4.plot(test_sharpe_dates, test_sharpe, color='darkred', linewidth=2, alpha=0.7,
+                label='Test Sharpe')
+    
+    # 期间分界线
+    ax4.axvline(x=test_start_date, color='red', linestyle='-', alpha=0.8, linewidth=2)
+    ax4.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+    
+    ax4.set_title('Rolling Sharpe Ratio (3-day window)', fontsize=12, fontweight='bold')
+    ax4.set_xlabel('Date')
+    ax4.set_ylabel('Sharpe Ratio')
+    ax4.grid(True, alpha=0.3)
+    if len(warmup_returns) > 3 or len(test_returns) > 3:
+        ax4.legend(fontsize=9)
+    
+    plt.suptitle(f'{symbol} Risk Analysis (Original Framework)\nWarmup vs Test Period Comparison',
+                 fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(f"{charts_path}/risk_return_analysis.png", dpi=300, bbox_inches='tight')
+    plt.close()
+
+def generate_portfolio_value_chart_original_framework(chart_data: pd.DataFrame, charts_path: str, meta_config: Dict, symbol: str, model_name: str) -> None:
+    """基于原始框架生成投资组合价值图"""
+    fig, ax1 = plt.subplots(figsize=(14, 8))
+    
+    initial_capital = 100000
+    
+    # 左坐标轴：投资组合价值
+    color1 = '#2E86AB'
+    ax1.set_xlabel('日期', fontsize=12)
+    ax1.set_ylabel('理论投资组合价值 ($)', color=color1, fontsize=12, fontweight='bold')
+    ax1.plot(chart_data['date'], chart_data['portfolio_value'],
+             marker='o', linewidth=2.5, markersize=4, color=color1,
+             label='投资组合价值 (原始框架)', alpha=0.8)
+    ax1.axhline(y=initial_capital, color=color1, linestyle='--', alpha=0.5,
+                label=f'初始资金: ${initial_capital:,}')
+    ax1.tick_params(axis='y', labelcolor=color1)
+    ax1.grid(True, alpha=0.2)
+    
+    # 右坐标轴：资产价格
+    ax2 = ax1.twinx()
+    color2 = '#F39C12'
+    ax2.set_ylabel('资产价格 ($)', color=color2, fontsize=12, fontweight='bold')
+    
+    # 归一化价格以便比较
+    initial_price = chart_data['price'].iloc[0]
+    price_scale = initial_capital / initial_price
+    normalized_prices = chart_data['price'] * price_scale
+    
+    ax2.plot(chart_data['date'], normalized_prices,
+            linewidth=2.5, color=color2, alpha=0.7,
+            label=f'{symbol} 价格 (归一化)')
+    ax2_ticks = ax2.get_yticks()
+    ax2.set_yticklabels([f'${tick/price_scale:.1f}' for tick in ax2_ticks])
+    ax2.tick_params(axis='y', labelcolor=color2)
+    
+    # 标记交易信号
+    buy_mask = chart_data['action'] == 1
+    sell_mask = chart_data['action'] == -1
+    
+    if buy_mask.any():
+        buy_data = chart_data[buy_mask]
+        ax1.scatter(buy_data['date'], buy_data['portfolio_value'],
+                   color='green', s=100, marker='^', alpha=0.8, label='买入信号',
+                   zorder=5, edgecolor='darkgreen')
+    
+    if sell_mask.any():
+        sell_data = chart_data[sell_mask]
+        ax1.scatter(sell_data['date'], sell_data['portfolio_value'],
+                   color='red', s=100, marker='v', alpha=0.8, label='卖出信号',
+                   zorder=5, edgecolor='darkred')
+    
+    plt.title(f'{symbol} 投资组合表现 vs 资产价格 (基于原始框架)',
+              fontsize=16, fontweight='bold', pad=20)
+    
+    # 合并图例
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', framealpha=0.9)
+    
+    plt.xticks(rotation=45)
+    fig.tight_layout()
+    plt.savefig(f"{charts_path}/portfolio_value.png", dpi=300, bbox_inches='tight', facecolor='white')
+    plt.close()
+
+def generate_returns_comparison_chart_original_framework(chart_data: pd.DataFrame, charts_path: str, meta_config: Dict, symbol: str, model_name: str) -> None:
+    """基于原始框架生成收益率对比图"""
+    plt.figure(figsize=(14, 8))
+    
+    # 绘制策略收益率
+    plt.plot(chart_data['date'], chart_data['cumulative_return'],
+             marker='o', linewidth=2.5, markersize=4, color='#2E86AB',
+             label=f'{model_name} 策略 (原始框架)')
+    
+    # 绘制基准收益率
+    plt.plot(chart_data['date'], chart_data['buyhold_return'],
+             linewidth=2.5, color='orange', alpha=0.8,
+             label=f'{symbol} Buy&Hold')
+    
+    # 标记交易信号
+    buy_mask = chart_data['action'] == 1
+    sell_mask = chart_data['action'] == -1
+    
+    if buy_mask.any():
+        buy_data = chart_data[buy_mask]
+        plt.scatter(buy_data['date'], buy_data['cumulative_return'],
+                   color='green', s=100, marker='^', alpha=0.8, label='买入信号', zorder=5)
+    
+    if sell_mask.any():
+        sell_data = chart_data[sell_mask]
+        plt.scatter(sell_data['date'], sell_data['cumulative_return'],
+                   color='red', s=100, marker='v', alpha=0.8, label='卖出信号', zorder=5)
+    
+    plt.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+    plt.title(f'{symbol} 累计收益率对比 (基于原始框架逻辑)',
+              fontsize=16, fontweight='bold')
+    plt.xlabel('日期', fontsize=12)
+    plt.ylabel('累计收益率 (%)', fontsize=12)
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(f"{charts_path}/returns_comparison.png", dpi=300, bbox_inches='tight')
+    plt.close()
+
+def generate_trading_signals_chart_original_framework(chart_data: pd.DataFrame, charts_path: str, meta_config: Dict, symbol: str, model_name: str) -> None:
+    """基于原始框架生成交易信号图"""
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10))
+    
+    # 上图：价格和交易信号
+    ax1.plot(chart_data['date'], chart_data['price'],
+             linewidth=2, color='#2E86AB', label=f'{symbol} 价格')
+    
+    # 标记交易信号
+    buy_mask = chart_data['action'] == 1
+    sell_mask = chart_data['action'] == -1
+    
+    if buy_mask.any():
+        buy_data = chart_data[buy_mask]
+        ax1.scatter(buy_data['date'], buy_data['price'],
+                   color='green', s=120, marker='^', alpha=0.8, label='买入信号',
+                   zorder=5, edgecolor='darkgreen', linewidth=2)
+    
+    if sell_mask.any():
+        sell_data = chart_data[sell_mask]
+        ax1.scatter(sell_data['date'], sell_data['price'],
+                   color='red', s=120, marker='v', alpha=0.8, label='卖出信号',
+                   zorder=5, edgecolor='darkred', linewidth=2)
+    
+    ax1.set_title(f'{symbol} 价格与交易信号', fontsize=14, fontweight='bold')
+    ax1.set_ylabel('价格 ($)', fontsize=12)
+    ax1.grid(True, alpha=0.3)
+    ax1.legend()
+    
+    # 下图：持仓状态
+    ax2.step(chart_data['date'], chart_data['action'], where='post',
+             linewidth=2, color='purple', label='持仓状态')
+    ax2.fill_between(chart_data['date'], chart_data['action'], alpha=0.3, 
+                    step='post', color='purple')
+    
+    ax2.set_title('持仓状态 (原始框架: -1=空头, 0=中性, 1=多头)', fontsize=14, fontweight='bold')
+    ax2.set_xlabel('日期', fontsize=12)
+    ax2.set_ylabel('持仓方向', fontsize=12)
+    ax2.set_yticks([-1, 0, 1])
+    ax2.set_yticklabels(['空头 (-1)', '中性 (0)', '多头 (1)'])
+    ax2.grid(True, alpha=0.3)
+    ax2.legend()
+    
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(f"{charts_path}/trading_signals.png", dpi=300, bbox_inches='tight')
+    plt.close()
+
+def generate_risk_return_analysis_chart_original_framework(chart_data: pd.DataFrame, charts_path: str, meta_config: Dict, symbol: str, model_name: str) -> None:
+    """基于原始框架生成风险收益分析图"""
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+    
+    # 计算daily returns
+    daily_returns = []
+    for i in range(1, len(chart_data)):
+        if i == 1:
+            daily_returns.append(0)  # 第一天
+        else:
+            daily_ret = chart_data.iloc[i-1]['action'] * np.log(chart_data.iloc[i]['price'] / chart_data.iloc[i-1]['price'])
+            daily_returns.append(daily_ret * 100)  # 转换为百分比
+    daily_returns.append(0)  # 最后一天
+    
+    chart_data_copy = chart_data.copy()
+    chart_data_copy['daily_return'] = daily_returns
+    
+    # 1. 收益分布直方图
+    ax1.hist(daily_returns, bins=20, alpha=0.7, color='skyblue', edgecolor='black')
+    ax1.set_title('日收益率分布', fontsize=12, fontweight='bold')
+    ax1.set_xlabel('日收益率 (%)')
+    ax1.set_ylabel('频次')
+    ax1.grid(True, alpha=0.3)
+    
+    # 2. 累计收益vs波动率
+    volatility = np.std(daily_returns)
+    final_return = chart_data['cumulative_return'].iloc[-1]
+    
+    ax2.scatter(volatility, final_return, s=200, c='red', alpha=0.7, marker='*')
+    ax2.set_title('风险-收益散点图', fontsize=12, fontweight='bold')
+    ax2.set_xlabel('波动率 (日收益率标准差)')
+    ax2.set_ylabel('总收益率 (%)')
+    ax2.grid(True, alpha=0.3)
+    ax2.text(volatility, final_return + 0.5, f'{model_name}\n策略', 
+             ha='center', fontsize=10, fontweight='bold')
+    
+    # 3. 回撤分析
+    rolling_max = chart_data['portfolio_value'].expanding().max()
+    drawdown = (chart_data['portfolio_value'] - rolling_max) / rolling_max * 100
+    
+    ax3.fill_between(chart_data['date'], drawdown, 0, alpha=0.3, color='red')
+    ax3.plot(chart_data['date'], drawdown, color='darkred', linewidth=1)
+    ax3.set_title(f'回撤分析 (最大回撤: {drawdown.min():.2f}%)', fontsize=12, fontweight='bold')
+    ax3.set_xlabel('日期')
+    ax3.set_ylabel('回撤 (%)')
+    ax3.grid(True, alpha=0.3)
+    
+    # 4. 滚动夏普比率 (简化版)
+    rolling_window = 5  # 5天滚动窗口
+    if len(daily_returns) > rolling_window:
+        rolling_sharpe = []
+        for i in range(rolling_window, len(daily_returns)):
+            window_returns = daily_returns[i-rolling_window:i]
+            if np.std(window_returns) > 0:
+                sharpe = np.mean(window_returns) / np.std(window_returns) * np.sqrt(252)  # 年化
+            else:
+                sharpe = 0
+            rolling_sharpe.append(sharpe)
+        
+        sharpe_dates = chart_data['date'].iloc[rolling_window:]
+        ax4.plot(sharpe_dates, rolling_sharpe, color='green', linewidth=2)
+        ax4.set_title(f'滚动夏普比率 ({rolling_window}日窗口)', fontsize=12, fontweight='bold')
+        ax4.set_xlabel('日期')
+        ax4.set_ylabel('夏普比率')
+        ax4.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+        ax4.grid(True, alpha=0.3)
+    else:
+        ax4.text(0.5, 0.5, '数据不足\n无法计算滚动夏普比率', 
+                ha='center', va='center', transform=ax4.transAxes, fontsize=12)
+        ax4.set_title('滚动夏普比率', fontsize=12, fontweight='bold')
+    
+    plt.suptitle(f'{symbol} 风险收益分析 (基于原始框架)', fontsize=16, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(f"{charts_path}/risk_return_analysis.png", dpi=300, bbox_inches='tight')
+    plt.close()
 
 def generate_portfolio_value_chart(trading_df: pd.DataFrame, benchmark_df: pd.DataFrame, charts_path: str, meta_config: Dict) -> None:
     """Generate portfolio value vs benchmark price comparison chart with dual y-axis"""
@@ -1384,20 +1547,28 @@ def generate_trading_report(config: Dict) -> None:
     benchmark_table = ""
     
     try:
-        # 1. 交易明细表格
+        # 1. Position明细表格 (基于原始框架逻辑)
         if os.path.exists(csv_path):
             df = pd.read_csv(csv_path)
-            trading_df = df[df['action'] != 'EXPERIMENT_RUN']
+            # 过滤掉错误记录
+            position_df = df[df['position_desc'] != 'ERROR']
             
-            if not trading_df.empty:
-                trading_data_table = """## 📋 交易明细
+            if not position_df.empty:
+                trading_data_table = """## 📋 Position明细 (基于原始框架)
 
-| 日期 | 动作 | 数量 | 价格 ($) | 交易价值 ($) | 投资组合价值 ($) | 决策理由 |
-|------|------|------|----------|------------|----------------|----------|
+| 日期 | Position | Position描述 | 资产价格 ($) | 理论组合价值 ($) | 日收益率 (%) | 累计收益率 (%) | 阶段 |
+|------|----------|------------|------------|-----------------|------------|--------------|------|
 """
-                for _, row in trading_df.iterrows():
-                    reasoning = str(row.get('reasoning', 'N/A'))[:30] + '...' if len(str(row.get('reasoning', 'N/A'))) > 30 else str(row.get('reasoning', 'N/A'))
-                    trading_data_table += f"| {row['date']} | {row['action']} | {row['quantity']} | ${row['price']:.2f} | ${row['value']:,.2f} | ${row.get('portfolio_value', 0):,.2f} | {reasoning} |\n"
+                for _, row in position_df.iterrows():
+                    position = int(row.get('position', 0))
+                    position_desc = row.get('position_desc', 'UNKNOWN')
+                    asset_price = row.get('asset_price', 0)
+                    portfolio_value = row.get('theoretical_portfolio_value', 0)
+                    daily_return = row.get('daily_log_return', 0)
+                    cumulative_return = row.get('cumulative_return_pct', 0)
+                    status = row.get('status', 'unknown')
+                    
+                    trading_data_table += f"| {row['date']} | {position:+d} | {position_desc} | ${asset_price:.2f} | ${portfolio_value:,.2f} | {daily_return:.3f}% | {cumulative_return:.2f}% | {status} |\n"
         
         # 2. 投资组合表现表格
         perf = portfolio_data['portfolio_metrics']
@@ -1433,18 +1604,33 @@ def generate_trading_report(config: Dict) -> None:
 | Information Ratio | {risk_data.get('information_ratio', 0):.2f} | Consistency of excess returns |
 """
         
-        # 4. 基准比较表格
-        trading_summary = portfolio_data['trading_summary']
-        benchmark = portfolio_data['benchmark_comparison']
-        benchmark_table = f"""## 📈 策略表现对比
+        # 4. 基准比较表格 (基于原始框架Position逻辑)
+        if os.path.exists(csv_path):
+            df = pd.read_csv(csv_path)
+            position_df = df[df['position_desc'] != 'ERROR']
+            
+            # 统计position分布
+            long_positions = len(position_df[position_df['position'] == 1])
+            short_positions = len(position_df[position_df['position'] == -1])
+            neutral_positions = len(position_df[position_df['position'] == 0])
+            total_decisions = len(position_df)
+            
+            position_stats_table = f"""## 📊 Position统计 (原始框架)
 
-| 交易统计 | 数值 |
-|----------|------|
-| 总交易次数 | {trading_summary.get('total_trades', 0)} |
-| 买入交易 | {trading_summary.get('buy_trades', 0)} 次 |
-| 卖出交易 | {trading_summary.get('sell_trades', 0)} 次 |
-| 持有决策 | {trading_summary.get('hold_decisions', 0)} 次 |
-| 胜率 | {trading_summary.get('win_rate', 0):.1f}% |
+| Position统计 | 数值 | 比例 |
+|-------------|------|------|
+| 总决策次数 | {total_decisions} | 100.0% |
+| Long Position (1) | {long_positions} | {(long_positions/total_decisions*100 if total_decisions > 0 else 0):.1f}% |
+| Short Position (-1) | {short_positions} | {(short_positions/total_decisions*100 if total_decisions > 0 else 0):.1f}% |
+| Neutral Position (0) | {neutral_positions} | {(neutral_positions/total_decisions*100 if total_decisions > 0 else 0):.1f}% |
+"""
+        else:
+            position_stats_table = "## 📊 Position统计\n\n无可用数据"
+            
+        benchmark = portfolio_data['benchmark_comparison']
+        benchmark_table = position_stats_table + f"""
+
+## 📈 策略表现对比
 
 | 基准比较 | 本策略 | Buy & Hold | 差异 |
 |----------|---------|------------|------|
@@ -1454,7 +1640,7 @@ def generate_trading_report(config: Dict) -> None:
         
     except Exception as e:
         logger.warning(f"Error generating table data: {e}")
-        trading_data_table = "## 📋 Trading Details\n\nLoading data..."
+        trading_data_table = "## 📋 Position Details\n\nLoading data..."
         portfolio_metrics_table = "## 🎯 Portfolio Performance\n\nAnalyzing data..."
         risk_metrics_table = "## ⚠️ Risk Analysis\n\nCalculating data..."
         benchmark_table = "## 📈 Strategy Performance Comparison\n\nComparing data..."
@@ -1565,7 +1751,7 @@ def generate_trading_report(config: Dict) -> None:
 
 
 def save_trading_results_csv(config: Dict) -> None:
-    """Save trading results and performance data to CSV format with portfolio values"""
+    """Save trading results based on original framework logic (position-based, not actual trading)"""
     meta_config = config["meta_config"]
     csv_path = meta_config["csv_save_path"]
     base_path = meta_config["base_path"]
@@ -1576,117 +1762,146 @@ def save_trading_results_csv(config: Dict) -> None:
     trading_data = []
     
     try:
-        # 尝试从final_result加载数据
-        result_path = f"{base_path}/final_result"
-        if os.path.exists(result_path):
-            # 查找portfolio的JSON文件
-            portfolio_path = os.path.join(result_path, "agent", "single_asset_portfolio_checkpoint.json")
-            if os.path.exists(portfolio_path):
-                with open(portfolio_path, 'r', encoding='utf-8') as f:
-                    try:
-                        portfolio_data = json.load(f)
-                        # 提取交易数据
-                        if ('trading_dates' in portfolio_data and 
-                            'trading_price' in portfolio_data and 
-                            'trading_position' in portfolio_data):
-                            
-                            dates = portfolio_data['trading_dates']
-                            prices = portfolio_data['trading_price']
-                            positions = portfolio_data['trading_position']
-                            
-                            # 计算投资组合价值序列
-                            initial_cash = 100000.0
-                            current_cash = initial_cash
-                            current_position = 0
-                            warmup_end_index = 2  # 假设前2个交易日是warmup阶段
-                            
-                            for i, (date, price, pos) in enumerate(zip(dates, prices, positions)):
-                                # 计算交易动作
-                                if i == 0:
-                                    # 第一个交易
-                                    if pos > 0:
-                                        action = 'BUY'
-                                        quantity = abs(pos)
-                                    elif pos < 0:
-                                        action = 'SELL' 
-                                        quantity = abs(pos)
-                                    else:
-                                        action = 'HOLD'
-                                        quantity = 0
-                                else:
-                                    # 根据头寸变化确定动作
-                                    prev_pos = positions[i-1]
-                                    pos_change = pos - prev_pos
-                                    if pos_change > 0:
-                                        action = 'BUY'
-                                        quantity = pos_change
-                                    elif pos_change < 0:
-                                        action = 'SELL'
-                                        quantity = abs(pos_change)
-                                    else:
-                                        action = 'HOLD'
-                                        quantity = 0
-                                
-                                # 更新投资组合状态
-                                if action == 'BUY':
-                                    cost = quantity * price
-                                    current_cash -= cost
-                                    current_position += quantity
-                                elif action == 'SELL':
-                                    proceeds = quantity * price
-                                    current_cash += proceeds
-                                    current_position -= quantity
-                                
-                                # 计算交易价值和投资组合价值
-                                trade_value = quantity * price if quantity > 0 else 0
-                                portfolio_value = current_cash + (current_position * price)
-                                
-                                # 确定阶段
-                                phase = 'warmup' if i < warmup_end_index else 'test'
-                                
-                                trading_data.append({
-                                    'timestamp': meta_config['timestamp'],
-                                    'model': meta_config['model_name'],
-                                    'symbol': portfolio_data.get('symbol', meta_config['symbols']),
-                                    'date': date,
-                                    'action': action,
-                                    'quantity': quantity,
-                                    'price': price,
-                                    'value': trade_value,
-                                    'portfolio_value': portfolio_value,
-                                    'current_position': current_position,
-                                    'cash_remaining': current_cash,
-                                    'status': phase
-                                })
-                            
-                            logger.info(f"✅ 从 portfolio checkpoint 提取了 {len(trading_data)} 条交易记录")
-                    except Exception as e:
-                        logger.warning(f"解析portfolio JSON文件失败: {e}")
-            else:
-                logger.warning(f"Portfolio文件不存在: {portfolio_path}")
+        # 使用和图表生成相同的逻辑加载数据
+        from src.agent import FinMemAgent
         
-        # 如果没有交易数据，创建一个基础的记录
+        # 读取metadata获取时间段和数据路径
+        metadata_path = f"{base_path}/metadata.json"
+        metadata = {}
+        if os.path.exists(metadata_path):
+            with open(metadata_path, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+        
+        # 获取配置信息
+        symbol = meta_config['symbols']
+        warmup_start = metadata.get('trading_config', {}).get('warmup_period', {}).get('start_date', '2020-03-12')
+        warmup_end = metadata.get('trading_config', {}).get('warmup_period', {}).get('end_date', '2020-03-20')
+        test_start = metadata.get('trading_config', {}).get('test_period', {}).get('start_date', '2020-03-23')
+        test_end = metadata.get('trading_config', {}).get('test_period', {}).get('end_date', '2020-03-30')
+        data_path = metadata.get('data_paths', {}).get('env_data_path', {}).get(symbol, f'data/{symbol.lower()}.json')
+        
+        # 加载agent检查点获取action数据
+        action_path = os.path.join(base_path, "final_result", "agent")
+        if not os.path.exists(action_path):
+            action_path = os.path.join(base_path, "test_output", "agent")
+        
+        if not os.path.exists(action_path):
+            logger.warning(f"无法找到agent检查点用于生成CSV: {action_path}")
+            return
+            
+        agent = FinMemAgent.load_checkpoint(path=action_path)
+        action_records = agent.portfolio.get_action_record()
+        
+        # 加载市场价格数据
+        with open(data_path, 'r') as f:
+            market_data = json.load(f)
+        
+        # 整理数据 - 包含warmup和test期
+        all_data = []
+        
+        if isinstance(action_records, dict) and 'date' in action_records:
+            record_dates = action_records['date']
+            record_positions = action_records['position']  # -1, 0, 1
+            
+            # 处理所有数据（warmup + test）
+            for i, date_str in enumerate(record_dates):
+                if isinstance(date_str, str):
+                    date_obj = pd.to_datetime(date_str)
+                else:
+                    date_obj = pd.to_datetime(date_str)
+                
+                # 确定时期
+                period = None
+                if pd.to_datetime(warmup_start) <= date_obj <= pd.to_datetime(warmup_end):
+                    period = 'warmup'
+                elif pd.to_datetime(test_start) <= date_obj <= pd.to_datetime(test_end):
+                    period = 'test'
+                
+                if period:
+                    # 获取对应的市场价格
+                    date_key = date_obj.strftime('%Y-%m-%d')
+                    if date_key in market_data and market_data[date_key] and 'prices' in market_data[date_key]:
+                        all_data.append({
+                            'date': date_obj,
+                            'price': market_data[date_key]['prices'],
+                            'position': record_positions[i],  # -1, 0, 1
+                            'period': period
+                        })
+        
+        if not all_data:
+            logger.warning("无法获取有效的position数据用于生成CSV")
+            return
+        
+        # 按日期排序
+        all_data.sort(key=lambda x: x['date'])
+        
+        # 基于原始框架逻辑计算理论投资组合表现
+        initial_capital = 100000
+        cumulative_log_return = 0
+        
+        for i, data_point in enumerate(all_data):
+            if i == 0:
+                portfolio_value = initial_capital
+                daily_return = 0.0
+                cumulative_return = 0.0
+            else:
+                # 原始框架核心逻辑：daily_return = position * ln(price_t / price_t-1)
+                daily_log_return = all_data[i-1]['position'] * np.log(data_point['price'] / all_data[i-1]['price'])
+                cumulative_log_return += daily_log_return
+                
+                # 转换为组合价值
+                portfolio_value = initial_capital * np.exp(cumulative_log_return)
+                daily_return = daily_log_return * 100  # 转换为百分比
+                cumulative_return = (portfolio_value / initial_capital - 1) * 100
+            
+            # 确定position描述
+            if data_point['position'] == 1:
+                position_desc = "LONG"
+                position_name = "Long Position"
+            elif data_point['position'] == -1:
+                position_desc = "SHORT" 
+                position_name = "Short Position"
+            else:
+                position_desc = "NEUTRAL"
+                position_name = "Neutral Position"
+            
+            trading_data.append({
+                'timestamp': meta_config['timestamp'],
+                'model': meta_config['model_name'],
+                'symbol': symbol,
+                'date': data_point['date'].strftime('%Y-%m-%d'),
+                'position': data_point['position'],  # -1, 0, 1
+                'position_desc': position_desc,
+                'position_name': position_name,
+                'asset_price': data_point['price'],
+                'theoretical_portfolio_value': portfolio_value,
+                'daily_log_return': daily_return,
+                'cumulative_return_pct': cumulative_return,
+                'status': data_point['period']
+            })
+        
+        # 如果没有position数据，创建一个基础的记录
         if not trading_data:
-            logger.warning("未找到交易数据，创建基础记录")
+            logger.warning("未找到position数据，创建基础记录")
             trading_data.append({
                 'timestamp': meta_config['timestamp'],
                 'model': meta_config['model_name'], 
-                'symbol': meta_config['symbols'],
+                'symbol': symbol,
                 'date': datetime.now().strftime('%Y-%m-%d'),
-                'action': 'EXPERIMENT_RUN',
-                'quantity': 0,
-                'price': 0,
-                'value': 0,
-                'portfolio_value': 100000,
-                'current_position': 0,
-                'cash_remaining': 100000,
+                'position': 0,
+                'position_desc': 'NEUTRAL',
+                'position_name': 'Neutral Position',
+                'asset_price': 0,
+                'theoretical_portfolio_value': 100000,
+                'daily_log_return': 0.0,
+                'cumulative_return_pct': 0.0,
                 'status': 'completed' if os.path.exists(f"{base_path}/final_result") else 'in_progress'
             })
         
         # 创建DataFrame并保存
         df = pd.DataFrame(trading_data)
         df.to_csv(csv_path, index=False, encoding='utf-8')
-        logger.info(f"✅ 交易结果CSV已保存: {csv_path}")
+        logger.info(f"✅ Position记录CSV已保存: {csv_path}")
         logger.info(f"✅ CSV包含 {len(df)} 条记录，字段: {list(df.columns)}")
         
     except Exception as e:
@@ -1698,11 +1913,13 @@ def save_trading_results_csv(config: Dict) -> None:
             'model': meta_config['model_name'],
             'symbol': meta_config['symbols'],
             'date': datetime.now().strftime('%Y-%m-%d'), 
-            'action': 'ERROR',
-            'quantity': 0,
-            'price': 0,
-            'value': 0,
-            'portfolio_value': 100000,
+            'position': 0,
+            'position_desc': 'ERROR',
+            'position_name': 'Error State',
+            'asset_price': 0,
+            'theoretical_portfolio_value': 100000,
+            'daily_log_return': 0.0,
+            'cumulative_return_pct': 0.0,
             'status': 'error',
             'error_message': str(e)
         }]
@@ -2151,120 +2368,6 @@ def test_func(
     generate_trading_report(config)
 
 
-@app.command(name="generate-enhanced-charts")
-def generate_enhanced_charts_func(
-    result_path: str = typer.Argument(..., help="结果路径（如：results/250808_230347_Qwen_Qwen3-8B_JNJ）"),
-    include_warmup: bool = typer.Option(False, "--include-warmup", help="包含warmup期数据")
-):
-    """基于原始框架生成增强的图表和CSV"""
-    
-    # 验证结果路径是否存在
-    if not os.path.exists(result_path):
-        logger.error(f"结果路径不存在: {result_path}")
-        raise typer.Exit(1)
-    
-    # 从结果路径加载配置
-    try:
-        # 优先尝试从 metadata.json 加载配置  
-        metadata_path = os.path.join(result_path, "metadata.json")
-        if os.path.exists(metadata_path):
-            with open(metadata_path, 'r') as f:
-                metadata = json.load(f)
-                
-            # 从metadata构建完整配置
-            config = {
-                "meta_config": {
-                    "timestamp": metadata["experiment_info"]["timestamp"],
-                    "model_name": metadata["experiment_info"]["model_name"],
-                    "symbols": "_".join(metadata["experiment_info"]["trading_symbols"]),
-                    "base_path": result_path,
-                    "result_save_path": os.path.join(result_path, "final_result"),
-                    "log_save_path": os.path.join(result_path, "log")
-                },
-                "env_config": {
-                    "trading_symbols": metadata["trading_config"]["trading_symbols"],
-                    "warmup_start_time": metadata["trading_config"]["warmup_period"]["start_date"],
-                    "warmup_end_time": metadata["trading_config"]["warmup_period"]["end_date"],
-                    "test_start_time": metadata["trading_config"]["test_period"]["start_date"],
-                    "test_end_time": metadata["trading_config"]["test_period"]["end_date"],
-                    "env_data_path": metadata["data_paths"]["env_data_path"]
-                },
-                "chat_config": {
-                    "chat_model": metadata["model_config"]["chat_model"]
-                }
-            }
-        else:
-            # 尝试从目录名解析基本信息
-            dir_parts = os.path.basename(result_path.rstrip('/')).split('_')
-            if len(dir_parts) >= 3:
-                timestamp = dir_parts[0] + '_' + dir_parts[1]
-                model_name = '_'.join(dir_parts[2:-1])
-                symbols = dir_parts[-1]
-                
-                # 构建最小配置
-                config = {
-                    "meta_config": {
-                        "timestamp": timestamp,
-                        "model_name": model_name,
-                        "symbols": symbols,
-                        "base_path": result_path,
-                        "result_save_path": os.path.join(result_path, "final_result"),
-                        "log_save_path": os.path.join(result_path, "log")
-                    },
-                    "env_config": {
-                        "trading_symbols": [symbols],
-                        "warmup_start_time": "2020-03-12",
-                        "warmup_end_time": "2020-03-20", 
-                        "test_start_time": "2020-03-23",
-                        "test_end_time": "2020-03-30",
-                        "env_data_path": {
-                            symbols: f"data/{symbols.lower()}.json"
-                        }
-                    },
-                    "chat_config": {
-                        "chat_model": model_name.replace('_', '/')
-                    }
-                }
-            else:
-                raise ValueError(f"无法从目录名解析配置: {result_path}")
-        
-        # 确保必要的路径存在
-        if "meta_config" not in config:
-            config["meta_config"] = {}
-        config["meta_config"]["result_save_path"] = os.path.join(result_path, "final_result")
-        config["meta_config"]["log_save_path"] = os.path.join(result_path, "log")
-        
-        logger.info(f"使用结果路径: {result_path}")
-        
-    except Exception as e:
-        logger.error(f"加载结果路径配置失败: {e}")
-        raise typer.Exit(1)
-    
-    # 安全移除所有现有handlers
-    try:
-        logger.remove()
-    except ValueError:
-        pass
-    logger.add(
-        sink=os.path.join(config["meta_config"]["log_save_path"], "enhanced_charts.log"),
-        format="{time} {level} {message}",
-        level="INFO",
-        mode="w",
-    )
-    logger.add(sys.stdout, level="INFO", format="{time} {level} {message}")
-    
-    logger.info("🚀 开始生成基于原始框架的增强图表和CSV...")
-    
-    try:
-        # 调用我们的增强功能
-        generate_charts_original_framework(config, include_warmup=include_warmup)
-        logger.info("✅ 增强图表和CSV生成完成")
-        
-    except Exception as e:
-        logger.error(f"生成增强图表失败: {e}")
-        import traceback
-        traceback.print_exc()
-        raise typer.Exit(1)
 
 @app.command(name="test-checkpoint")
 def test_checkpoint_func(
@@ -2426,27 +2529,9 @@ def run_all_func(
         logger.info("✅ Test phase completed")
         
         # Step 3: Eval
-        logger.info("📊 Step 3/5: Starting evaluation phase")
+        logger.info("📊 Step 3/3: Starting evaluation phase")
         eval_func(config_path)
         logger.info("✅ Evaluation phase completed")
-        
-        # Step 4: Generate enhanced charts and CSV
-        logger.info("📈 Step 4/5: Starting enhanced data export and visualization")
-        config = load_config(config_path)
-        if "meta_config" not in config:
-            config = generate_timestamped_meta_config(config)
-        
-        # 获取生成的结果路径
-        result_path = config["meta_config"]["base_path"]
-        
-        # 直接调用生成函数，包含warmup期数据
-        generate_charts_original_framework(config, include_warmup=True)
-        logger.info("✅ Enhanced data export and visualization completed")
-        
-        # Step 5: Generate comparison charts and update report
-        logger.info("📊 Step 5/5: Generating comparison charts and updating report")
-        generate_comparison_charts_and_update_report(config)
-        logger.info("✅ Comparison charts and report update completed")
         
         logger.info("🎉 Complete pipeline finished successfully!")
         
